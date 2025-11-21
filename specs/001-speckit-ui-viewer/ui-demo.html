@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spec-Kit UI Viewer - 设计演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+        }
+
+        /* 顶部标题栏 */
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #e6edf3;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            border-bottom: 1px solid #30363d;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .header .project-info {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 0.3rem;
+        }
+
+        /* 主容器 */
+        .container {
+            display: flex;
+            height: calc(100vh - 80px);
+        }
+
+        /* 左侧导航栏 */
+        .sidebar {
+            width: 280px;
+            background: #161b22;
+            border-right: 1px solid #30363d;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            border-bottom: 1px solid #21262d;
+        }
+
+        .sidebar-section-title {
+            padding: 1rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #0d1117;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-section-title:hover {
+            background: #161b22;
+            color: #c9d1d9;
+        }
+
+        .sidebar-item {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-size: 0.9rem;
+            color: #c9d1d9;
+        }
+
+        .sidebar-item:hover {
+            background: #1c2128;
+            border-left-color: #58a6ff;
+        }
+
+        .sidebar-item.active {
+            background: #0d419d;
+            border-left-color: #58a6ff;
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .sidebar-item-icon {
+            margin-right: 0.5rem;
+            opacity: 0.7;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0d1117;
+        }
+
+        /* 面包屑导航 */
+        .breadcrumb {
+            padding: 1rem 2rem;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            font-size: 0.9rem;
+            color: #8b949e;
+        }
+
+        .breadcrumb a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb span {
+            margin: 0 0.5rem;
+            color: #6e7681;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #30363d;
+            background: #161b22;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #238636;
+            color: white;
+            border: 1px solid #2ea043;
+        }
+
+        .btn-primary:hover {
+            background: #2ea043;
+        }
+
+        .btn-secondary {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+        }
+
+        .btn-secondary:hover {
+            background: #30363d;
+            border-color: #8b949e;
+        }
+
+        .btn-success {
+            background: #1f6feb;
+            color: white;
+            border: 1px solid #388bfd;
+        }
+
+        .btn-success:hover {
+            background: #388bfd;
+        }
+
+        /* 文档查看模式 */
+        .document-view {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            background: #0d1117;
+        }
+
+        .document-view h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #e6edf3;
+        }
+
+        .document-view h2 {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #e6edf3;
+            border-bottom: 2px solid #21262d;
+            padding-bottom: 0.5rem;
+        }
+
+        .document-view h3 {
+            color: #e6edf3;
+            margin-top: 1.5rem;
+        }
+
+        .document-view p {
+            line-height: 1.7;
+            margin-bottom: 1rem;
+            color: #c9d1d9;
+        }
+
+        .document-view code {
+            background: #161b22;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 0.9em;
+            color: #ff7b72;
+            border: 1px solid #30363d;
+        }
+
+        .document-view pre {
+            background: #161b22;
+            color: #e6edf3;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border: 1px solid #30363d;
+        }
+
+        .document-view pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+            border: none;
+        }
+
+        .document-view ul {
+            color: #c9d1d9;
+        }
+
+        .document-view strong {
+            color: #e6edf3;
+        }
+
+        /* 编辑模式 - 分屏 */
+        .editor-split {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #30363d;
+            background: #0d1117;
+        }
+
+        .editor-pane:last-child {
+            border-right: none;
+        }
+
+        .pane-header {
+            padding: 0.75rem 1rem;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #8b949e;
+        }
+
+        .editor-textarea {
+            flex: 1;
+            padding: 1.5rem;
+            border: none;
+            resize: none;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            background: #0d1117;
+            color: #e6edf3;
+        }
+
+        .editor-textarea:focus {
+            outline: none;
+        }
+
+        .preview-pane {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: #0d1117;
+            color: #c9d1d9;
+        }
+
+        .preview-pane h1 {
+            color: #e6edf3;
+        }
+
+        .preview-pane h2 {
+            color: #e6edf3;
+            border-bottom: 2px solid #21262d;
+        }
+
+        .preview-pane h3 {
+            color: #e6edf3;
+        }
+
+        .preview-pane p {
+            color: #c9d1d9;
+        }
+
+        .preview-pane strong {
+            color: #e6edf3;
+        }
+
+        /* 评论高亮 */
+        .comment-highlight {
+            background: #1c2128;
+            border-bottom: 2px solid #d29922;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .comment-highlight:hover {
+            background: #22272e;
+        }
+
+        .comment-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #d29922;
+            color: #0d1117;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-size: 0.75rem;
+            margin-left: 0.3rem;
+            vertical-align: middle;
+            font-weight: 600;
+        }
+
+        /* 评论面板 */
+        .comments-panel {
+            position: fixed;
+            right: 0;
+            top: 80px;
+            width: 350px;
+            height: calc(100vh - 80px);
+            background: #161b22;
+            border-left: 1px solid #30363d;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.5);
+            display: none;
+            flex-direction: column;
+        }
+
+        .comments-panel.show {
+            display: flex;
+        }
+
+        .comments-header {
+            padding: 1rem;
+            border-bottom: 1px solid #30363d;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #e6edf3;
+            background: #0d1117;
+        }
+
+        .close-btn {
+            cursor: pointer;
+            color: #8b949e;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #e6edf3;
+        }
+
+        .comments-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #0d1117;
+        }
+
+        .comment-item {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #58a6ff;
+        }
+
+        .comment-time {
+            color: #8b949e;
+        }
+
+        .comment-content {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+            color: #c9d1d9;
+        }
+
+        .comment-status {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .comment-status.open {
+            background: #1c2128;
+            color: #d29922;
+            border: 1px solid #d29922;
+        }
+
+        .comment-status.resolved {
+            background: #1c2128;
+            color: #3fb950;
+            border: 1px solid #3fb950;
+        }
+
+        /* 搜索框 */
+        .search-box {
+            padding: 1rem;
+            border-bottom: 1px solid #30363d;
+            background: #0d1117;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: #0d1117;
+            color: #e6edf3;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1f6feb;
+            background: #0d1117;
+        }
+
+        .search-input::placeholder {
+            color: #8b949e;
+        }
+
+        /* 模式切换标签 */
+        .mode-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #21262d;
+            color: #e6edf3;
+            padding: 0.75rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border: 1px solid #30363d;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部标题栏 -->
+    <div class="header">
+        <h1>📚 Spec-Kit UI Viewer</h1>
+        <div class="project-info">项目: peckit-enhancer | 端口: 3000 | 状态: 运行中</div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <!-- 搜索框 -->
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="🔍 搜索文档...">
+            </div>
+
+            <!-- 宪章节点 -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    📜 宪章 (Constitution)
+                    <span>▼</span>
+                </div>
+                <div class="sidebar-item active">
+                    <span class="sidebar-item-icon">📄</span>
+                    constitution.md
+                </div>
+            </div>
+
+            <!-- 规格节点 -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    📋 规格 (Specifications)
+                    <span>▼</span>
+                </div>
+                <div class="sidebar-item">
+                    <span class="sidebar-item-icon">📁</span>
+                    001-speckit-ui-viewer
+                </div>
+                <div class="sidebar-item" style="padding-left: 2.5rem;">
+                    <span class="sidebar-item-icon">📄</span>
+                    spec.md
+                </div>
+                <div class="sidebar-item" style="padding-left: 2.5rem;">
+                    <span class="sidebar-item-icon">✅</span>
+                    requirements.md
+                </div>
+            </div>
+
+            <!-- 计划节点 -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    🗓️ 计划 (Plan)
+                    <span>▼</span>
+                </div>
+                <div class="sidebar-item">
+                    <span class="sidebar-item-icon">📄</span>
+                    plan.md
+                </div>
+                <div class="sidebar-item">
+                    <span class="sidebar-item-icon">📊</span>
+                    data-model.md
+                </div>
+                <div class="sidebar-item">
+                    <span class="sidebar-item-icon">📁</span>
+                    contracts/
+                </div>
+            </div>
+
+            <!-- 任务节点 -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    ✓ 任务 (Tasks)
+                    <span>▼</span>
+                </div>
+                <div class="sidebar-item">
+                    <span class="sidebar-item-icon">📄</span>
+                    tasks.md
+                </div>
+            </div>
+
+            <!-- 研究节点 -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    🔬 研究 (Research)
+                    <span>▼</span>
+                </div>
+                <div class="sidebar-item">
+                    <span class="sidebar-item-icon">📄</span>
+                    research.md
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 面包屑导航 -->
+            <div class="breadcrumb">
+                <a href="#">首页</a>
+                <span>›</span>
+                <a href="#">宪章</a>
+                <span>›</span>
+                <strong>constitution.md</strong>
+            </div>
+
+            <!-- 工具栏 -->
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="toggleEditMode()">
+                    ✏️ 编辑
+                </button>
+                <button class="btn btn-secondary" onclick="toggleComments()">
+                    💬 评论 (3)
+                </button>
+                <button class="btn btn-secondary">
+                    🔗 分享
+                </button>
+                <div style="flex: 1"></div>
+                <button class="btn btn-success" style="display: none;" id="saveBtn">
+                    💾 保存
+                </button>
+            </div>
+
+            <!-- 查看模式 -->
+            <div class="document-view" id="viewMode">
+                <h1>Spec-Kit UI 宪章</h1>
+
+                <h2>项目身份</h2>
+                <p><strong>项目名称</strong>: Spec-Kit UI<br>
+                <strong>目的</strong>: 一个无服务端的 Web UI,用于查看、编辑和评论 Spec-Kit 工作流文档<br>
+                <strong>架构</strong>: CLI 驱动的前端,无后端服务器</p>
+
+                <h2>核心原则</h2>
+
+                <h3>I. 无服务端架构 (NON-NEGOTIABLE)</h3>
+                <p class="comment-highlight" onclick="showCommentPanel()">
+                    系统必须在没有传统后端服务器的情况下运行。所有状态和数据持久化通过 CLI 命令访问的本地文件系统进行。
+                    <span class="comment-indicator">2</span>
+                </p>
+
+                <p><strong>理由</strong>: 消除部署复杂性,减少攻击面,确保数据主权(用户拥有所有文件),并与 Spec-Kit 基于本地文件的规范驱动开发理念保持一致。</p>
+
+                <p><strong>规则</strong>:</p>
+                <ul style="line-height: 1.8; margin-left: 2rem; color: #c9d1d9;">
+                    <li>不使用 HTTP 后端服务或 API 服务器</li>
+                    <li>所有文件操作必须通过 CLI 命令进行</li>
+                    <li>前端必须可作为静态资源提供</li>
+                    <li>不依赖远程数据库或云存储</li>
+                    <li>所有数据存储在项目的 <code>.specify/</code> 和 <code>specs/</code> 目录</li>
+                </ul>
+
+                <h3>II. CLI 优先接口</h3>
+                <p>每个文件系统操作都必须通过遵循基于文本协议的 CLI 命令公开。</p>
+
+                <p><strong>规则</strong>:</p>
+                <ul style="line-height: 1.8; margin-left: 2rem; color: #c9d1d9;">
+                    <li>命令通过参数/stdin 接受输入</li>
+                    <li>成功输出到 stdout (结构化数据优先使用 JSON)</li>
+                    <li>错误和警告输出到 stderr</li>
+                    <li>退出码: 0 = 成功, 非零 = 失败</li>
+                </ul>
+
+                <h2>技术约束</h2>
+
+                <h3>必需的技术栈决策</h3>
+                <pre><code>- 前端框架: React, Vue, 或 Svelte
+- 构建工具: Vite
+- Markdown 渲染: Marked.js 或 Remark
+- 状态管理: Context API, Zustand, 或 Pinia
+- 样式: Tailwind CSS</code></pre>
+
+                <p style="margin-top: 2rem; color: #8b949e; font-size: 0.9rem;">
+                    <em>💡 提示: 将鼠标悬停在高亮文本上可以查看评论</em>
+                </p>
+            </div>
+
+            <!-- 编辑模式 (默认隐藏) -->
+            <div class="editor-split" id="editMode" style="display: none;">
+                <div class="editor-pane">
+                    <div class="pane-header">✏️ 编辑器</div>
+                    <textarea class="editor-textarea" placeholder="在此输入 Markdown 内容..."># Spec-Kit UI 宪章
+
+## 项目身份
+
+**项目名称**: Spec-Kit UI
+**目的**: 一个无服务端的 Web UI,用于查看、编辑和评论 Spec-Kit 工作流文档
+**架构**: CLI 驱动的前端,无后端服务器
+
+## 核心原则
+
+### I. 无服务端架构 (NON-NEGOTIABLE)
+
+系统必须在没有传统后端服务器的情况下运行。所有状态和数据持久化通过 CLI 命令访问的本地文件系统进行。
+
+**理由**: 消除部署复杂性,减少攻击面,确保数据主权(用户拥有所有文件)。</textarea>
+                </div>
+                <div class="editor-pane">
+                    <div class="pane-header">👁️ 实时预览</div>
+                    <div class="preview-pane">
+                        <h1>Spec-Kit UI 宪章</h1>
+                        <h2>项目身份</h2>
+                        <p><strong>项目名称</strong>: Spec-Kit UI<br>
+                        <strong>目的</strong>: 一个无服务端的 Web UI,用于查看、编辑和评论 Spec-Kit 工作流文档<br>
+                        <strong>架构</strong>: CLI 驱动的前端,无后端服务器</p>
+                        <h2>核心原则</h2>
+                        <h3>I. 无服务端架构 (NON-NEGOTIABLE)</h3>
+                        <p>系统必须在没有传统后端服务器的情况下运行。所有状态和数据持久化通过 CLI 命令访问的本地文件系统进行。</p>
+                        <p><strong>理由</strong>: 消除部署复杂性,减少攻击面,确保数据主权(用户拥有所有文件)。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 评论面板 -->
+    <div class="comments-panel" id="commentsPanel">
+        <div class="comments-header">
+            <span>💬 评论</span>
+            <span class="close-btn" onclick="toggleComments()">×</span>
+        </div>
+        <div class="comments-list">
+            <div class="comment-item">
+                <div class="comment-header">
+                    <span class="comment-author">👤 张三</span>
+                    <span class="comment-time">2 小时前</span>
+                </div>
+                <div class="comment-content">
+                    这个架构设计非常合理,完全符合我们的需求。不过需要考虑一下大文件的性能问题。
+                </div>
+                <span class="comment-status open">未解决</span>
+            </div>
+
+            <div class="comment-item">
+                <div class="comment-header">
+                    <span class="comment-author">👤 李四</span>
+                    <span class="comment-time">1 小时前</span>
+                </div>
+                <div class="comment-content">
+                    同意张三的观点。建议在实现阶段加入虚拟滚动优化。
+                </div>
+                <span class="comment-status open">未解决</span>
+            </div>
+
+            <div class="comment-item">
+                <div class="comment-header">
+                    <span class="comment-author">👤 王五</span>
+                    <span class="comment-time">30 分钟前</span>
+                </div>
+                <div class="comment-content">
+                    已经在计划阶段添加了性能优化方案,包括懒加载和分页加载策略。
+                </div>
+                <span class="comment-status resolved">已解决</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模式指示器 -->
+    <div class="mode-indicator" id="modeIndicator">
+        📖 查看模式
+    </div>
+
+    <script>
+        // 切换编辑模式
+        function toggleEditMode() {
+            const viewMode = document.getElementById('viewMode');
+            const editMode = document.getElementById('editMode');
+            const saveBtn = document.getElementById('saveBtn');
+            const modeIndicator = document.getElementById('modeIndicator');
+
+            if (viewMode.style.display === 'none') {
+                // 切换到查看模式
+                viewMode.style.display = 'block';
+                editMode.style.display = 'none';
+                saveBtn.style.display = 'none';
+                modeIndicator.textContent = '📖 查看模式';
+                modeIndicator.style.background = '#21262d';
+            } else {
+                // 切换到编辑模式
+                viewMode.style.display = 'none';
+                editMode.style.display = 'flex';
+                saveBtn.style.display = 'inline-flex';
+                modeIndicator.textContent = '✏️ 编辑模式';
+                modeIndicator.style.background = '#238636';
+            }
+        }
+
+        // 切换评论面板
+        function toggleComments() {
+            const panel = document.getElementById('commentsPanel');
+            panel.classList.toggle('show');
+        }
+
+        // 显示评论面板
+        function showCommentPanel() {
+            const panel = document.getElementById('commentsPanel');
+            panel.classList.add('show');
+        }
+
+        // 侧边栏折叠功能
+        document.querySelectorAll('.sidebar-section-title').forEach(title => {
+            title.addEventListener('click', function() {
+                const section = this.parentElement;
+                const items = section.querySelectorAll('.sidebar-item');
+                const arrow = this.querySelector('span:last-child');
+
+                items.forEach(item => {
+                    item.style.display = item.style.display === 'none' ? 'block' : 'none';
+                });
+
+                arrow.textContent = arrow.textContent === '▼' ? '▶' : '▼';
+            });
+        });
+
+        // 搜索功能演示
+        document.querySelector('.search-input').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            if (searchTerm.length > 0) {
+                console.log('搜索:', searchTerm);
+                // 这里可以添加实际的搜索逻辑
+            }
+        });
+    </script>
+</body>
+</html>

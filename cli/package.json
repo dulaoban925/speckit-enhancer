@@ -4,7 +4,8 @@
   "description": "Speckit Enhancer - CLI for serving dashboard and managing project documentation",
   "main": "dist/index.js",
   "bin": {
-    "speckit-ui": "dist/index.js"
+    "speckit-enhancer": "dist/index.js",
+    "ske": "dist/index.js"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",

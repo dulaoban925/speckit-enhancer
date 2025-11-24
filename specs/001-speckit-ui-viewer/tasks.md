@@ -2,8 +2,8 @@
 
 **Feature**: Spec-Kit UI Viewer
 **Branch**: `001-speckit-ui-viewer`
-**Date**: 2025-11-19
-**Status**: Ready for implementation
+**Date**: 2025-11-24 (Updated)
+**Status**: Phase 6 完成 - 评论系统实现完成（V2.0 DOM 注入方案）
 
 ---
 
@@ -333,8 +333,14 @@ Group 3: T072 (在所有实现完成后)
 - [X] T082 [P] [US4] 实现评论服务 `dashboard/src/services/commentService.ts` (调用 CLI comment 命令、锚定位置计算)
 - [X] T083 [P] [US4] 实现文本选择 Hook `dashboard/src/hooks/useTextSelection.ts` (捕获选中文本、计算行号)
 - [X] T084 [P] [US4] 实现评论管理 Hook `dashboard/src/hooks/useComments.ts` (加载、添加、更新、删除评论)
-- [ ] T085 [US4] 实现评论高亮逻辑 `dashboard/src/components/document/Viewer.tsx` (在文档中标记评论位置、显示评论计数徽章、支持悬停预览评论内容)
-- [X] T086 [US4] 实现评论锚定重定位算法 `dashboard/src/services/commentService.ts` (行号 + 文本片段匹配)
+- [X] T085 [US4] 实现评论高亮逻辑 `dashboard/src/services/commentHighlighter.ts` (✅ 已完成 - 采用 V2.0 DOM 注入方案替代 V1.0 覆盖层方案)
+  - 实现 CommentHighlighter 服务类（TreeWalker 查找文本节点、上下文匹配、DOM 包裹）
+  - 在文档中直接注入 `<span class="comment-highlight">` 标记评论位置
+  - 支持点击标记打开评论面板、悬停视觉反馈
+  - 使用 MutationObserver 自动重新注入标记（防止 DOM 变化导致标记丢失）
+- [X] T086 [US4] 实现评论锚定重定位算法 `dashboard/src/services/commentHighlighter.ts` (行号 + 文本片段 + 上下文匹配)
+- [X] T087.1 [US4] 优化交互流程：文本选中后自动打开评论表单（移除中间"添加评论"按钮）
+- [X] T087.2 [US4] 修复评论标记持久化问题：使用 MutationObserver 监听 DOM 变化并自动重新注入
 
 ### 集成测试
 
@@ -349,15 +355,17 @@ Group 3: T087 (在所有实现完成后)
 ```
 
 **验收标准**:
-- ✅ 选择文本后显示"添加评论"浮动按钮
+- ✅ 选择文本后自动打开评论表单（优化后的交互流程）
 - ✅ 输入评论并提交成功保存到 JSON 文件
 - ✅ 刷新页面后评论仍然存在
-- ✅ 文档中评论位置显示高亮标记
+- ✅ 文档中评论位置显示黄色高亮和下划线标记（DOM 注入方案）
+- ✅ 评论标记在任何 DOM 变化后自动重新注入（MutationObserver）
 - ✅ 点击评论标记打开评论面板显示详情
-- ✅ 支持回复评论 (线程讨论)
-- ✅ 评论可标记为"已解决" (状态变化)
-- ✅ 文档编辑后评论能智能重定位
-- ✅ E2E 测试通过
+- ✅ 评论标记跟随文本滚动，无延迟（零性能开销）
+- ✅ 支持回复评论（线程讨论）
+- ✅ 评论可标记为"已解决"（状态变化）
+- ✅ 评论锚定使用上下文匹配算法提高准确性
+- ⏸️ E2E 测试（待实现）
 
 ---
 

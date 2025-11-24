@@ -1,14 +1,16 @@
 import React, { useState } from 'react'
-import { Button } from '../common/Button'
+import Button from '../common/Button'
 
 interface CommentFormProps {
-  onSubmit: (content: string) => void | Promise<void>
+  onSubmit: (content: string, author?: string) => void | Promise<void>
   onCancel?: () => void
   initialContent?: string
   placeholder?: string
   submitLabel?: string
   isReply?: boolean
   isLoading?: boolean
+  showAuthorField?: boolean
+  selectedText?: string
 }
 
 /**
@@ -23,8 +25,11 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   submitLabel = '提交评论',
   isReply = false,
   isLoading = false,
+  showAuthorField = true,
+  selectedText,
 }) => {
   const [content, setContent] = useState(initialContent)
+  const [author, setAuthor] = useState('Anonymous')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,7 +41,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
 
     setIsSubmitting(true)
     try {
-      await onSubmit(content.trim())
+      await onSubmit(content.trim(), showAuthorField ? author.trim() : undefined)
       setContent('') // 清空输入框
     } catch (error) {
       console.error('提交评论失败:', error)
@@ -54,9 +59,56 @@ export const CommentForm: React.FC<CommentFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      {/* 显示选中的文本 */}
+      {selectedText && (
+        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border-l-4 border-blue-500">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">评论的内容：</div>
+          <div className="text-sm text-gray-700 dark:text-gray-300 italic">
+            "{selectedText}"
+          </div>
+        </div>
+      )}
+
+      {/* 作者输入框 */}
+      {showAuthorField && (
+        <div>
+          <label htmlFor="author" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            作者
+          </label>
+          <input
+            type="text"
+            id="author"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            placeholder="输入您的名字"
+            disabled={isLoading}
+            className="
+              w-full
+              px-3 py-2
+              text-sm
+              border border-gray-300 dark:border-gray-600
+              rounded-lg
+              bg-white dark:bg-gray-800
+              text-gray-900 dark:text-gray-100
+              placeholder-gray-400 dark:placeholder-gray-500
+              focus:outline-none
+              focus:ring-2
+              focus:ring-blue-500 dark:focus:ring-blue-400
+              focus:border-transparent
+              disabled:opacity-50
+              disabled:cursor-not-allowed
+            "
+          />
+        </div>
+      )}
+
       {/* 文本输入区 */}
       <div>
+        <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          评论内容
+        </label>
         <textarea
+          id="content"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder={placeholder}
@@ -86,13 +138,6 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           <span className="text-xs text-gray-500 dark:text-gray-400">
             {content.length} 字符
           </span>
-
-          {/* 提示信息 */}
-          {content.trim() && content.length < 10 && (
-            <span className="text-xs text-yellow-600 dark:text-yellow-400">
-              建议至少输入 10 个字符
-            </span>
-          )}
         </div>
       </div>
 

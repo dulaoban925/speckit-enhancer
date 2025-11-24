@@ -107,4 +107,13 @@ export class CLIService {
       console.log(`停止监听文件: ${filePath}`)
     }
   }
+
+  /**
+   * 通用命令执行方法（用于评论等复杂命令）
+   */
+  static async executeCommentCommand<T>(
+    args: Record<string, unknown>
+  ): Promise<CLIResponse<T>> {
+    return await this.executeCommand<T>('comment', args, 'POST')
+  }
 }

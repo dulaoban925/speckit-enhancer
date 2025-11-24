@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { Comment, CommentStatus, CommentAnchor } from '../types'
+import type { Comment, CommentAnchor } from '../types'
+import { CommentStatus } from '../types'
 import { CommentService } from '../services/commentService'
 
 interface UseCommentsOptions {

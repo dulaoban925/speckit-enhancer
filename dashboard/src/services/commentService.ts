@@ -1,6 +1,6 @@
 import type { Comment, CommentAnchor, CommentStatus, CLIResponse } from '../types'
 import { v4 as uuidv4 } from 'uuid'
-import { CliService } from './cliService'
+import { CLIService } from './cliService'
 
 /**
  * 评论服务
@@ -20,44 +20,43 @@ export class CommentService {
     projectRoot?: string
   }): Promise<CLIResponse<{ comment: Comment }>> {
     try {
-      const args = [
-        'comment',
-        'add',
-        '--document-path',
-        params.documentPath,
-        '--feature-id',
-        params.featureId,
-        '--content',
-        params.content,
-        '--author',
-        params.author,
-        '--start-line',
-        params.anchor.startLine.toString(),
-        '--end-line',
-        params.anchor.endLine.toString(),
-        '--text-fragment',
-        params.anchor.textFragment,
-      ]
+      console.log('[CommentService] 添加评论到 CLI, params:', params)
+
+      const args: Record<string, unknown> = {
+        action: 'add',
+        documentPath: params.documentPath,
+        featureId: params.featureId,
+        content: params.content,
+        author: params.author,
+        startLine: params.anchor.startLine,
+        endLine: params.anchor.endLine,
+        textFragment: params.anchor.textFragment,
+      }
 
       if (params.anchor.contextBefore) {
-        args.push('--context-before', params.anchor.contextBefore)
+        args.contextBefore = params.anchor.contextBefore
       }
 
       if (params.anchor.contextAfter) {
-        args.push('--context-after', params.anchor.contextAfter)
+        args.contextAfter = params.anchor.contextAfter
       }
 
       if (params.parentId) {
-        args.push('--parent-id', params.parentId)
+        args.parentId = params.parentId
       }
 
       if (params.projectRoot) {
-        args.push('--project-root', params.projectRoot)
+        args.projectRoot = params.projectRoot
       }
 
-      const response = await CliService.executeCommand<{ comment: Comment }>(args)
+      console.log('[CommentService] CLI 命令参数:', args)
+
+      const response = await CLIService.executeCommentCommand<{ comment: Comment }>(args)
+      console.log('[CommentService] CLI 响应:', response)
+
       return response
     } catch (error) {
+      console.error('[CommentService] CLI 调用失败:', error)
       return {
         success: false,
         error: {
@@ -78,24 +77,21 @@ export class CommentService {
     projectRoot?: string
   }): Promise<CLIResponse<{ comments: Comment[]; total: number; totalWithReplies: number }>> {
     try {
-      const args = [
-        'comment',
-        'list',
-        '--document-path',
-        params.documentPath,
-        '--feature-id',
-        params.featureId,
-      ]
+      const args: Record<string, unknown> = {
+        action: 'list',
+        documentPath: params.documentPath,
+        featureId: params.featureId,
+      }
 
       if (params.status) {
-        args.push('--status', params.status)
+        args.status = params.status
       }
 
       if (params.projectRoot) {
-        args.push('--project-root', params.projectRoot)
+        args.projectRoot = params.projectRoot
       }
 
-      const response = await CliService.executeCommand<{
+      const response = await CLIService.executeCommentCommand<{
         comments: Comment[]
         total: number
         totalWithReplies: number
@@ -125,30 +121,26 @@ export class CommentService {
     projectRoot?: string
   }): Promise<CLIResponse<{ comment: Comment }>> {
     try {
-      const args = [
-        'comment',
-        'update',
-        '--document-path',
-        params.documentPath,
-        '--feature-id',
-        params.featureId,
-        '--comment-id',
-        params.commentId,
-      ]
+      const args: Record<string, unknown> = {
+        action: 'update',
+        documentPath: params.documentPath,
+        featureId: params.featureId,
+        commentId: params.commentId,
+      }
 
       if (params.content) {
-        args.push('--content', params.content)
+        args.content = params.content
       }
 
       if (params.status) {
-        args.push('--status', params.status)
+        args.status = params.status
       }
 
       if (params.projectRoot) {
-        args.push('--project-root', params.projectRoot)
+        args.projectRoot = params.projectRoot
       }
 
-      const response = await CliService.executeCommand<{ comment: Comment }>(args)
+      const response = await CLIService.executeCommentCommand<{ comment: Comment }>(args)
       return response
     } catch (error) {
       return {
@@ -171,22 +163,18 @@ export class CommentService {
     projectRoot?: string
   }): Promise<CLIResponse<{ deletedCount: number; commentId: string }>> {
     try {
-      const args = [
-        'comment',
-        'delete',
-        '--document-path',
-        params.documentPath,
-        '--feature-id',
-        params.featureId,
-        '--comment-id',
-        params.commentId,
-      ]
-
-      if (params.projectRoot) {
-        args.push('--project-root', params.projectRoot)
+      const args: Record<string, unknown> = {
+        action: 'delete',
+        documentPath: params.documentPath,
+        featureId: params.featureId,
+        commentId: params.commentId,
       }
 
-      const response = await CliService.executeCommand<{
+      if (params.projectRoot) {
+        args.projectRoot = params.projectRoot
+      }
+
+      const response = await CLIService.executeCommentCommand<{
         deletedCount: number
         commentId: string
       }>(args)

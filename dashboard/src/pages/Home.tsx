@@ -55,7 +55,7 @@ const Home: React.FC = () => {
                   <p className="mt-4">
                     提示: 确保在 Speckit 项目根目录运行{' '}
                     <code className="bg-gh-canvas-default px-2 py-1 rounded">
-                      speckit-ui serve
+                      ske dashboard
                     </code>
                   </p>
                 </div>

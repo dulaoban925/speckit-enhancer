@@ -178,3 +178,134 @@ frontend/
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
 无宪章违规。所有设计决策符合宪章原则。
+
+## Design Revisions
+
+### Revision 1: 评论标记实现方案重构 (2025-01-24)
+
+**状态**: ✅ 已完成实现 (2025-11-24)
+
+**问题**: 初始实现使用 fixed 定位覆盖层来标记被评论的文本,存在以下问题:
+1. 需要监听滚动事件并实时更新标记位置,性能开销大
+2. Range 对象可能失效,导致位置计算不准确
+3. 标记与文本位置同步困难,用户体验差
+4. 实现复杂度高,维护成本高
+
+**解决方案**: 采用 **DOM 直接注入** 方案,在 Markdown 渲染后直接修改 DOM 结构
+
+**实际实现** (2025-11-24):
+
+已成功实现 V2.0 DOM 注入方案，核心实现包括：
+
+1. **CommentHighlighter 服务** (`dashboard/src/services/commentHighlighter.ts`)
+   - `inject()`: 主入口，遍历评论并注入标记
+   - `findTextNode()`: 使用 TreeWalker + 上下文匹配查找目标文本节点
+   - `wrapTextNode()`: 分割文本节点并包裹在 `<span class="comment-highlight">` 中
+   - `createHighlightSpan()`: 创建带样式的高亮元素（根据状态显示不同颜色）
+   - `bindEvents()`: 绑定点击和悬停事件
+   - `clear()`: 清除所有评论标记
+
+2. **MutationObserver 监听** (`dashboard/src/pages/DocumentView.tsx`)
+   - 自动检测 DOM 结构变化（如打开/关闭评论面板导致重新渲染）
+   - 防止无限循环：注入时暂停观察器，完成后恢复
+   - 200ms 防抖优化，避免频繁触发
+   - 排除评论标记自身的变化
+
+3. **交互优化**
+   - 文本选中后自动打开评论表单（移除中间"添加评论"按钮）
+   - 评论标记点击打开评论面板
+   - 悬停时增强视觉反馈
+
+4. **性能优势**
+   - ✅ 零滚动监听开销
+   - ✅ 标记完美跟随文本（无延迟）
+   - ✅ 自动适应 DOM 变化
+   - ✅ 实现简单，易维护
+
+#### 新架构设计
+
+**模式分离**:
+- **预览模式** (Preview Mode): 只读渲染器,支持评论标记和评论功能
+- **编辑模式** (Edit Mode): 左侧编辑器 + 右侧预览,不显示评论标记
+
+**评论标记实现**:
+```html
+<span
+  class="comment-highlight"
+  data-comment-id="comment_xxx"
+  data-status="open"
+  style="
+    background-color: rgba(255, 235, 59, 0.3);
+    border-bottom: 2px solid #FFEB3B;
+    padding: 1px 2px;
+    border-radius: 2px;
+    cursor: pointer;
+  "
+  title="点击查看/编辑评论"
+>
+  被评论的文本内容
+</span>
+```
+
+**技术实现路径**:
+1. Markdown 渲染为 HTML
+2. 加载评论数据
+3. 使用 TreeWalker 遍历文本节点
+4. 根据评论锚点定位文本节点
+5. 将目标文本包裹在 `<span class="comment-highlight">` 中
+6. 绑定点击事件打开评论面板
+
+**优势**:
+1. ✅ **零性能开销**: 无需监听滚动,标记自动跟随 DOM 布局
+2. ✅ **实现简单**: 只需在渲染阶段处理 DOM,无需复杂的位置计算
+3. ✅ **完美同步**: 标记是 DOM 的一部分,自动跟随滚动和窗口大小变化
+4. ✅ **易于维护**: 清晰的单向数据流,无复杂状态管理
+
+**影响的组件**:
+- `Viewer.tsx`: 渲染完成后调用评论标记注入器
+- `CommentHighlighter.ts` (新增): 负责 DOM 节点查找和包裹
+- `useCommentMarkers.ts` (删除): 不再需要动态计算位置
+- `useTextSelection.ts`: 保留,用于预览模式的文本选择创建评论
+
+**评论样式**:
+```css
+.comment-highlight {
+  background-color: rgba(255, 235, 59, 0.3);
+  border-bottom: 2px solid #FFEB3B;
+  padding: 1px 2px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.comment-highlight:hover {
+  background-color: rgba(255, 235, 59, 0.5);
+  border-bottom-width: 3px;
+}
+
+.comment-highlight[data-status="resolved"] {
+  background-color: rgba(76, 175, 80, 0.2);
+  border-bottom-color: #4CAF50;
+}
+
+.comment-highlight[data-status="archived"] {
+  background-color: rgba(158, 158, 158, 0.2);
+  border-bottom-color: #9E9E9E;
+  opacity: 0.6;
+}
+```
+
+**实现优先级**:
+1. ✅ **Phase 1 完成**: 重构 Viewer 为纯预览模式,实现模式切换
+2. ✅ **Phase 2 完成**: 实现 CommentHighlighter 核心算法
+3. ✅ **Phase 3 完成**: 集成评论交互(点击、悬停、创建)
+4. ✅ **Phase 4 完成**: 优化和边界情况处理
+   - 实现 MutationObserver 自动重新注入
+   - 优化交互流程（文本选中后自动打开表单）
+   - 防抖和性能优化
+
+**技术风险及解决**:
+- ✅ **跨标签文本**: 使用 TreeWalker 遍历文本节点,支持跨标签匹配
+- ✅ **文本变化**: 使用上下文匹配算法(contextBefore/contextAfter)提高定位准确性
+- ✅ **DOM 变化**: 使用 MutationObserver 自动检测并重新注入标记
+- ✅ **性能优化**: 零滚动监听,标记自动跟随文本

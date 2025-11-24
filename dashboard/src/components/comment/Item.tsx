@@ -172,8 +172,11 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               key={reply.id}
               comment={reply}
               isReply={true}
+              onReply={onReply}
               onEdit={onEdit}
               onDelete={onDelete}
+              onResolve={onResolve}
+              onReopen={onReopen}
             />
           ))}
         </div>

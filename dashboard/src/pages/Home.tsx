@@ -1,8 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProject } from '../hooks/useProject'
-import Header from '../components/layout/Header'
-import Sidebar from '../components/layout/Sidebar'
+import Layout from '../components/layout/Layout'
 import Button from '../components/common/Button'
 
 const Home: React.FC = () => {
@@ -10,13 +9,8 @@ const Home: React.FC = () => {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-gh-canvas-default flex flex-col">
-      <Header />
-
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-
-        <main className="flex-1 overflow-y-auto p-8">
+    <Layout showSidebar={true} enableSearch={true}>
+      <div className="p-8">
           <div className="max-w-4xl">
             {/* 页面标题 */}
             <header className="mb-8">
@@ -165,9 +159,8 @@ const Home: React.FC = () => {
               </div>
             )}
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
+    </Layout>
   )
 }
 

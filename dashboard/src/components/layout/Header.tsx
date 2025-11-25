@@ -2,7 +2,12 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../../store'
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  /** 搜索按钮点击回调 */
+  onSearchClick?: () => void
+}
+
+const Header: React.FC<HeaderProps> = ({ onSearchClick }) => {
   const navigate = useNavigate()
   const { project, toggleSidebar, sidebarCollapsed } = useAppStore()
 
@@ -56,7 +61,36 @@ const Header: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        {/* 搜索按钮 */}
+        {onSearchClick && (
+          <button
+            onClick={onSearchClick}
+            className="
+              flex items-center gap-2 px-3 py-1.5
+              bg-gh-canvas-default border border-gh-border-default
+              rounded-md
+              text-gh-fg-muted hover:text-gh-fg-default
+              hover:border-gh-border-emphasis
+              transition-colors
+            "
+            title="搜索文档 (Ctrl+K)"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <span className="text-sm">搜索</span>
+            <kbd className="hidden sm:inline px-1.5 py-0.5 text-xs bg-gh-canvas-subtle border border-gh-border-default rounded">
+              ⌘K
+            </kbd>
+          </button>
+        )}
+
         <span className="text-sm text-gh-fg-muted">
           {project?.features.length || 0} 个特性
         </span>

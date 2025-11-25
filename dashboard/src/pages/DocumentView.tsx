@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useParams, useNavigate, useBeforeUnload } from "react-router-dom";
+import { useParams, useNavigate, useLocation, useBeforeUnload } from "react-router-dom";
 import { useDocument } from "../hooks/useDocuments";
 import { useFileWatch } from "../hooks/useFileWatch";
 import { useComments } from "../hooks/useComments";
@@ -34,7 +34,34 @@ const DocumentView: React.FC = () => {
   const params = useParams<{ "*": string }>();
   const path = params["*"];
   const navigate = useNavigate();
+  const location = useLocation();
   const decodedPath = path ? decodeURIComponent(path) : undefined;
+
+  // 从 URL hash 中解析目标行号和匹配文本（格式：#L123 或 #L123:text=匹配文本）
+  const { targetLine, targetText } = React.useMemo(() => {
+    const hash = location.hash;
+    if (hash.startsWith('#L')) {
+      // 检查是否包含文本信息
+      const colonIndex = hash.indexOf(':text=');
+      if (colonIndex > 0) {
+        // 格式: #L123:text=匹配文本
+        const lineNum = parseInt(hash.substring(2, colonIndex), 10);
+        const text = decodeURIComponent(hash.substring(colonIndex + 6));
+        return {
+          targetLine: isNaN(lineNum) ? undefined : lineNum,
+          targetText: text || undefined,
+        };
+      } else {
+        // 格式: #L123
+        const lineNum = parseInt(hash.substring(2), 10);
+        return {
+          targetLine: isNaN(lineNum) ? undefined : lineNum,
+          targetText: undefined,
+        };
+      }
+    }
+    return { targetLine: undefined, targetText: undefined };
+  }, [location.hash]);
   const {
     document,
     loading,
@@ -856,7 +883,12 @@ const DocumentView: React.FC = () => {
           className="flex-1 overflow-y-auto relative"
           ref={viewerContainerRef}
         >
-          <Viewer content={document.content} onLinkClick={handleLinkClick} />
+          <Viewer
+            content={document.content}
+            onLinkClick={handleLinkClick}
+            targetLine={targetLine}
+            targetText={targetText}
+          />
 
           {/* 自定义文本高亮层（用于显示选中的文本） */}
           {selection && commentsEnabled && selection.rects && (

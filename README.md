@@ -16,7 +16,13 @@
   - **Fuse.js 精确匹配**: Extended Search 模式，支持精确包含搜索
   - **智能高亮**: mark.js 精确高亮搜索关键词，永久保留
   - **智能定位**: 多匹配项时自动定位到目标行最近的匹配
-  - **键盘友好**: Cmd+K / Ctrl+K 唤起，支持 ↑↓ 导航
+  - **键盘友好**: Cmd+K / Ctrl+K / Ctrl+F 唤起，支持 ↑↓ 导航
+- ⌨️ **键盘快捷键**: 全面的快捷键支持，提升操作效率
+  - **Cmd+K / Ctrl+K / Ctrl+F**: 打开全局搜索
+  - **Ctrl+S / Cmd+S**: 保存文档（编辑模式）
+  - **Escape**: 关闭弹窗或搜索
+  - **Shift+?**: 显示快捷键帮助
+  - **↑↓ Enter**: 导航和选择搜索结果
 - 🌙 **暗色主题**: GitHub Primer 风格的暗色 UI
 
 ## 快速开始
@@ -38,8 +44,8 @@ cd cli
 npm install
 npm link
 
-# 安装 Frontend 依赖
-cd ../frontend
+# 安装 Dashboard 依赖
+cd ../dashboard
 npm install
 ```
 
@@ -153,8 +159,8 @@ ske project validate
 cd cli
 npm run dev
 
-# Frontend 开发 (Vite HMR)
-cd frontend
+# Dashboard 开发 (Vite HMR)
+cd dashboard
 npm run dev
 ```
 
@@ -165,12 +171,12 @@ npm run dev
 cd cli
 npm test
 
-# Frontend 单元测试
-cd frontend
+# Dashboard 单元测试
+cd dashboard
 npm test
 
 # E2E 测试
-cd frontend
+cd dashboard
 npm run test:e2e
 ```
 
@@ -181,8 +187,8 @@ npm run test:e2e
 cd cli
 npm run build
 
-# 构建 Frontend
-cd frontend
+# 构建 Dashboard
+cd dashboard
 npm run build
 ```
 
@@ -258,6 +264,71 @@ speckit-enhancer/
   - **搜索功能 (Phase 7)**
     - [搜索功能实现总结](./docs/search-implementation-summary.md) - Fuse.js + mark.js 完整实现记录
     - [搜索功能测试指南](./docs/test-guide.md) - 快速测试步骤和验收标准
+
+## 常见问题
+
+### Q: 启动 Dashboard 后无法访问 http://localhost:3000
+
+**A:** 检查以下几点：
+1. 确保 Dashboard 服务已成功启动，查看终端输出是否有错误信息
+2. 检查端口 3000 是否被其他程序占用，可以使用 `--port` 参数指定其他端口：
+   ```bash
+   ske dashboard --port 8080
+   ```
+3. 确保防火墙没有阻止本地端口访问
+
+### Q: CLI 命令找不到（command not found: ske）
+
+**A:** 这通常是因为 `npm link` 没有执行或配置不正确：
+1. 在 `cli/` 目录下重新执行 `npm link`
+2. 确保 npm 全局 bin 目录在 PATH 中：
+   ```bash
+   npm config get prefix  # 查看 npm 全局目录
+   echo $PATH  # 确认该目录在 PATH 中
+   ```
+3. 尝试重启终端会话
+
+### Q: 文档加载失败或显示错误
+
+**A:** 可能的原因和解决方案：
+1. **确保在 Spec-Kit 项目根目录运行命令**：Dashboard 需要读取 `.specify/` 和 `specs/` 目录
+2. **检查文件权限**：确保 CLI 有权限读取项目文件
+3. **检查文件编码**：确保 Markdown 文件使用 UTF-8 编码
+
+### Q: 搜索功能没有返回预期结果
+
+**A:** 搜索使用精确匹配模式（Extended Search），可能的原因：
+1. **关键词不匹配**：搜索是精确包含匹配，确保关键词完整
+2. **文档未加载**：首次打开搜索需要时间加载所有文档内容，等待加载完成
+3. **大小写敏感**：搜索默认不区分大小写，但会精确匹配字符序列
+
+### Q: 评论功能不工作
+
+**A:** 检查以下几点：
+1. **确保在预览模式**：评论功能仅在文档预览模式下可用，编辑模式下不可用
+2. **选中文本**：必须先选中文本才能添加评论
+3. **评论存储目录**：确保 `.specify/memory/comments/` 目录存在且可写
+
+### Q: 快捷键不生效
+
+**A:** 可能的原因：
+1. **操作系统快捷键冲突**：某些快捷键可能与系统或其他应用冲突
+2. **焦点问题**：确保焦点在正确的元素上（例如，编辑器内才能使用 Ctrl+S）
+3. **查看帮助**：按 `Shift+?` 查看所有可用快捷键
+
+### Q: Dashboard 性能问题（加载慢、卡顿）
+
+**A:** 性能优化建议：
+1. **文档数量过多**：搜索功能首次加载所有文档，如果项目有大量文档，首次加载会较慢
+2. **大型文档**：渲染超大文档（10,000+ 行）可能会有延迟
+3. **清除缓存**：尝试清除浏览器缓存并刷新页面
+
+### Q: 如何在团队中共享评论
+
+**A:** 评论存储在 `.specify/memory/comments/` 目录中：
+1. 将评论文件提交到版本控制系统（Git）
+2. 团队成员拉取最新代码即可看到评论
+3. 评论以 JSON 格式存储，方便版本管理和合并
 
 ## 许可证
 

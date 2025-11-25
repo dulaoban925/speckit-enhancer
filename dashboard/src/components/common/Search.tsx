@@ -2,6 +2,8 @@ import React, { useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { SearchResult } from '../../services/searchService'
 import { SearchService } from '../../services/searchService'
+import { useDeferredLoading } from '../../hooks/useDeferredLoading'
+import { Spinner } from './Loading'
 
 interface SearchProps {
   /** 搜索查询 */
@@ -36,6 +38,7 @@ export const Search: React.FC<SearchProps> = ({
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const [selectedIndex, setSelectedIndex] = React.useState(0)
+  const deferredSearching = useDeferredLoading(isSearching, { delay: 150, minDuration: 250 })
 
   // 当搜索框打开时，自动聚焦输入框
   useEffect(() => {
@@ -122,10 +125,10 @@ export const Search: React.FC<SearchProps> = ({
 
   // 渲染搜索结果项
   const renderResults = () => {
-    if (isSearching) {
+    if (deferredSearching) {
       return (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400" />
+          <Spinner size="lg" />
         </div>
       )
     }

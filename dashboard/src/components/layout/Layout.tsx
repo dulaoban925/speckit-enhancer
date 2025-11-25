@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import { Search } from '../common/Search'
+import KeyboardShortcutsHelp from '../common/KeyboardShortcutsHelp'
 import { useSearch } from '../../hooks/useSearch'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useAppStore } from '../../store'
 import { CLIService } from '../../services/cliService'
 import type { DocumentFile } from '../../types'
@@ -25,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({
   enableSearch = true,
 }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [documentsWithContent, setDocumentsWithContent] = useState<DocumentFile[]>([])
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false)
   const { project } = useAppStore()
@@ -108,6 +111,14 @@ const Layout: React.FC<LayoutProps> = ({
     clearSearch()
   }, [clearSearch])
 
+  // 全局键盘快捷键（Ctrl+F 打开搜索, Shift+? 打开帮助）
+  useKeyboardShortcuts({
+    enableSearch,
+    onSearchOpen: handleSearchOpen,
+    enableHelp: true,
+    onHelpOpen: () => setIsHelpOpen(true),
+  })
+
   // 键盘快捷键：Ctrl+K 或 Cmd+K 打开搜索
   useEffect(() => {
     if (!enableSearch) return
@@ -144,6 +155,9 @@ const Layout: React.FC<LayoutProps> = ({
           onClose={handleSearchClose}
         />
       )}
+
+      {/* 键盘快捷键帮助 */}
+      <KeyboardShortcutsHelp isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </div>
   )
 }

@@ -4,6 +4,8 @@ import { useDocument } from "../hooks/useDocuments";
 import { useFileWatch } from "../hooks/useFileWatch";
 import { useComments } from "../hooks/useComments";
 import { useTextSelection } from "../hooks/useTextSelection";
+import { useDeferredLoading } from "../hooks/useDeferredLoading";
+import { useToast } from "../contexts/ToastContext";
 import { CLIService } from "../services/cliService";
 import { CommentHighlighter } from "../services/commentHighlighter";
 import Viewer from "../components/document/Viewer";
@@ -12,6 +14,7 @@ import Preview from "../components/document/Preview";
 import { CommentPanel } from "../components/comment/Panel";
 import { CommentForm } from "../components/comment/Form";
 import Modal, { ModalButton } from "../components/common/Modal";
+import { PageCenterLoading } from "../components/common/Loading";
 import type { CommentAnchor } from "../types";
 
 // 简单的路径解析（纯函数，移到组件外部避免重复创建）
@@ -36,6 +39,7 @@ const DocumentView: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const decodedPath = path ? decodeURIComponent(path) : undefined;
+  const toast = useToast();
 
   // 从 URL hash 中解析目标行号和匹配文本（格式：#L123 或 #L123:text=匹配文本）
   const { targetLine, targetText } = React.useMemo(() => {
@@ -70,6 +74,8 @@ const DocumentView: React.FC = () => {
     updateMetadata,
     updateDocument,
   } = useDocument(decodedPath);
+
+  const deferredLoading = useDeferredLoading(loading);
 
   // 从路径中提取 featureId
   // - specs/001-speckit-ui-viewer/spec.md -> "001"
@@ -477,6 +483,9 @@ const DocumentView: React.FC = () => {
         console.log("[FRONTEND] 重置文件监听器");
         fileWatcher.reset();
         console.log("[FRONTEND] ✅ 保存流程完成");
+
+        // 显示成功提示
+        toast.success("文档保存成功");
       } else if (response.error?.code === "CONFLICT") {
         console.log("[FRONTEND] ❌ 进入冲突分支");
         // 冲突
@@ -485,20 +494,21 @@ const DocumentView: React.FC = () => {
           actualMtime: response.error.details?.actualMtime || Date.now(),
         });
         setShowConflictModal(true);
+        toast.warning("文件已被外部修改，请选择如何处理");
       } else {
         console.log("[FRONTEND] ❌ 进入错误分支");
         // 其他错误
-        alert(`保存失败: ${response.error?.message || "未知错误"}`);
+        toast.error(`保存失败: ${response.error?.message || "未知错误"}`);
       }
     } catch (error) {
       console.error("保存失败:", error);
-      alert(
+      toast.error(
         `保存失败: ${error instanceof Error ? error.message : String(error)}`
       );
     } finally {
       setIsSaving(false);
     }
-  }, [document, decodedPath, editContent, updateDocument, fileWatcher]);
+  }, [document, decodedPath, editContent, updateDocument, fileWatcher, toast]);
 
   // 处理冲突 - 强制保存
   const handleForceSave = useCallback(async () => {
@@ -521,18 +531,19 @@ const DocumentView: React.FC = () => {
         });
         // 重置文件监听器
         fileWatcher.reset();
+        toast.success("文档强制保存成功");
       } else {
-        alert(`强制保存失败: ${response.error?.message || "未知错误"}`);
+        toast.error(`强制保存失败: ${response.error?.message || "未知错误"}`);
       }
     } catch (error) {
       console.error("强制保存失败:", error);
-      alert(
+      toast.error(
         `强制保存失败: ${error instanceof Error ? error.message : String(error)}`
       );
     } finally {
       setIsSaving(false);
     }
-  }, [decodedPath, editContent, updateDocument, fileWatcher]);
+  }, [decodedPath, editContent, updateDocument, fileWatcher, toast]);
 
   // 处理冲突 - 刷新重载
   const handleReload = useCallback(async () => {
@@ -587,11 +598,13 @@ const DocumentView: React.FC = () => {
         clearSelection();
         // 自动打开评论面板显示新添加的评论
         setIsCommentPanelOpen(true);
+        toast.success('评论添加成功');
       } else {
         console.error('[DocumentView] ❌ 评论提交失败');
+        toast.error('评论添加失败，请重试');
       }
     },
-    [selectedAnchor, addComment, clearSelection]
+    [selectedAnchor, addComment, clearSelection, toast]
   );
 
   // 取消评论表单
@@ -625,15 +638,8 @@ const DocumentView: React.FC = () => {
   };
 
   // 加载状态
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-gh-canvas-default">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gh-accent-emphasis mx-auto mb-4"></div>
-          <p className="text-gh-fg-muted">加载文档中...</p>
-        </div>
-      </div>
-    );
+  if (deferredLoading) {
+    return <PageCenterLoading message="加载文档中..." fullHeight />;
   }
 
   // 错误状态
@@ -669,8 +675,8 @@ const DocumentView: React.FC = () => {
     );
   }
 
-  // 文档未找到
-  if (!document) {
+  // 文档未找到（只在加载完成且没有错误时显示）
+  if (!document && !loading && !error) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gh-canvas-default p-8">
         <div className="text-center">
@@ -681,6 +687,11 @@ const DocumentView: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  // 类型保护：确保 document 不为 null
+  if (!document) {
+    return null;
   }
 
   // 正常渲染文档

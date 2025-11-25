@@ -1,11 +1,14 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProject } from '../hooks/useProject'
+import { useDeferredLoading } from '../hooks/useDeferredLoading'
 import Layout from '../components/layout/Layout'
 import Button from '../components/common/Button'
+import { PageCenterLoading } from '../components/common/Loading'
 
 const Home: React.FC = () => {
   const { project, loading, error } = useProject()
+  const deferredLoading = useDeferredLoading(loading)
   const navigate = useNavigate()
 
   return (
@@ -23,17 +26,10 @@ const Home: React.FC = () => {
             </header>
 
             {/* 加载状态 */}
-            {loading && (
-              <div className="bg-gh-canvas-subtle border border-gh-border-default rounded-lg p-6">
-                <div className="flex items-center gap-3">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gh-accent-fg"></div>
-                  <span className="text-gh-fg-muted">正在加载项目数据...</span>
-                </div>
-              </div>
-            )}
+            {deferredLoading && <PageCenterLoading message="正在加载项目数据..." />}
 
             {/* 错误状态 */}
-            {error && !loading && (
+            {error && !deferredLoading && (
               <div className="bg-gh-canvas-subtle border border-gh-danger-emphasis rounded-lg p-6">
                 <h2 className="text-xl font-semibold text-gh-danger-emphasis mb-2">
                   加载失败
@@ -57,7 +53,7 @@ const Home: React.FC = () => {
             )}
 
             {/* 项目信息 */}
-            {project && !loading && !error && (
+            {project && !deferredLoading && !error && (
               <div className="space-y-6">
                 {/* 宪章信息 */}
                 {project.constitution && (

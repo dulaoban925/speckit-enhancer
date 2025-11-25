@@ -432,19 +432,19 @@ Group 3: T094 (在所有实现完成后)
 
 - [ ] T095 [P] 实现文档缓存策略 `frontend/src/services/cliService.ts` (LRU 缓存、最多 10 个文档)
 - [ ] T096 [P] 实现虚拟滚动 `frontend/src/components/document/Viewer.tsx` (处理超大文档)
-- [ ] T097 [P] 添加加载状态指示 `frontend/src/components/common/Loading.tsx` (Spinner、Skeleton)
+- ✅ T097 [P] 添加加载状态指示 `frontend/src/components/common/Loading.tsx` (Spinner、Skeleton)
 - [ ] T098 [P] 优化 Markdown 渲染性能 `frontend/src/services/markdownService.ts` (Web Worker 处理大文档)
 
 ### 错误处理
 
-- [ ] T099 [P] 实现 React Error Boundaries `frontend/src/components/common/ErrorBoundary.tsx`
-- [ ] T100 [P] 添加全局错误提示 `frontend/src/components/common/Toast.tsx`
+- ✅ T099 [P] 实现 React Error Boundaries `dashboard/src/components/common/ErrorBoundary.tsx`
+- ✅ T100 [P] 添加全局错误提示 `dashboard/src/components/common/Toast.tsx` & `dashboard/src/contexts/ToastContext.tsx`
 - [ ] T101 [P] 实现 CLI 错误处理 `cli/src/utils/errorHandler.ts` (统一错误格式、退出码)
-- [ ] T102 添加 404 页面 `frontend/src/pages/NotFound.tsx`
+- ✅ T102 添加 404 页面 `dashboard/src/pages/NotFound.tsx`
 
 ### 用户体验增强
 
-- [ ] T103 [P] 添加键盘快捷键 `frontend/src/hooks/useKeyboardShortcuts.ts` (Ctrl+S 保存、Ctrl+F 搜索、Esc 关闭 Modal)
+- ✅ T103 [P] 添加键盘快捷键 `frontend/src/hooks/useKeyboardShortcuts.ts` (Ctrl+S 保存、Ctrl+F 搜索、Esc 关闭 Modal)
 - [ ] T104 [P] 实现主题切换 `frontend/src/store/index.ts` (light/dark 主题)
 - [ ] T105 [P] 添加响应式设计优化 `frontend/src/styles/global.css` (支持移动端、最小视口 320px)
 - [ ] T106 添加无障碍支持 `frontend/src/components/` (ARIA 标签、语义化 HTML、键盘导航)
@@ -452,10 +452,10 @@ Group 3: T094 (在所有实现完成后)
 ### 文档和部署
 
 - [ ] T107 [P] 编写 CLI 帮助文档 `cli/src/commands/*.ts` (--help 选项)
-- [ ] T108 [P] 更新 README.md (安装说明、使用示例、常见问题)
+- ✅ T108 [P] 更新 README.md (安装说明、使用示例、常见问题)
 - [ ] T109 [P] 创建 CONTRIBUTING.md (开发指南、代码规范、提交流程)
 - [ ] T110 配置生产构建 `frontend/vite.config.ts` (代码分割、压缩、CSP headers)
-- [ ] T111 添加 npm link 配置 `cli/package.json` (bin 字段指向 dist/index.js)
+- ✅ T111 添加 npm link 配置 `cli/package.json` (bin 字段指向 dist/index.js)
 - [ ] T112 创建发布脚本 `scripts/release.sh` (构建 CLI + Frontend、版本管理)
 
 **Parallel Execution Example**:

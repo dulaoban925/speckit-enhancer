@@ -2,8 +2,8 @@
 
 **Feature**: Spec-Kit UI Viewer
 **Branch**: `001-speckit-ui-viewer`
-**Date**: 2025-11-24 (Updated)
-**Status**: Phase 6 完成 - 评论系统实现完成（V2.0 DOM 注入方案）
+**Date**: 2025-11-25 (Updated)
+**Status**: Phase 7 完成 - 搜索功能实现完成（Fuse.js + mark.js 精确匹配）
 
 ---
 
@@ -384,16 +384,18 @@ Group 3: T087 (在所有实现完成后)
 
 ### Frontend 实现
 
-- [ ] T088 [P] [US5] 创建搜索组件 `frontend/src/components/common/Search.tsx` (搜索框、结果列表)
-- [ ] T089 [P] [US5] 实现搜索服务 `frontend/src/services/searchService.ts` (全文搜索、高亮匹配)
-- [ ] T090 [P] [US5] 实现搜索 Hook `frontend/src/hooks/useSearch.ts` (防抖搜索、缓存结果)
-- [ ] T091 [P] [US5] 增强面包屑导航 `frontend/src/components/layout/Breadcrumb.tsx` (显示完整路径、可点击)
-- [ ] T092 [US5] 实现搜索高亮 `frontend/src/components/document/Viewer.tsx` (标记搜索关键词)
-- [ ] T093 [US5] 实现搜索结果跳转 `frontend/src/components/common/Search.tsx` (滚动到匹配位置)
+- [X] T088 [P] [US5] 创建搜索组件 `dashboard/src/components/common/Search.tsx` (✅ 完成 - 搜索框、结果列表、键盘导航)
+- [X] T089 [P] [US5] 实现搜索服务 `dashboard/src/services/searchService.ts` (✅ 完成 - Fuse.js 全文搜索、Extended Search 精确匹配)
+- [X] T090 [P] [US5] 实现搜索 Hook `dashboard/src/hooks/useSearch.ts` (✅ 完成 - 防抖搜索 300ms、自动重建索引)
+- [ ] T091 [P] [US5] 增强面包屑导航 `dashboard/src/components/layout/Breadcrumb.tsx` (显示完整路径、可点击)
+- [X] T092 [US5] 实现搜索高亮 `dashboard/src/components/document/Viewer.tsx` (✅ 完成 - mark.js 精确高亮、永久保留)
+- [X] T093 [US5] 实现搜索结果跳转 `dashboard/src/components/common/Search.tsx` (✅ 完成 - URL hash 传递行号和匹配文本、智能定位最近匹配项)
+- [X] T093.1 [US5] 优化搜索匹配精度：清理 Markdown 语法后高亮
+- [X] T093.2 [US5] 优化多匹配项定位：根据行号计算距离，定位到正确的匹配项
 
 ### 集成测试
 
-- [ ] T094 [US5] 编写 E2E 测试 `frontend/tests/e2e/search.spec.ts` (输入关键词 → 验证结果 → 点击跳转)
+- [ ] T094 [US5] 编写 E2E 测试 `dashboard/tests/e2e/search.spec.ts` (输入关键词 → 验证结果 → 点击跳转)
 
 **Parallel Execution Example**:
 ```bash
@@ -404,14 +406,19 @@ Group 3: T094 (在所有实现完成后)
 ```
 
 **验收标准**:
-- ✅ 全局搜索框可输入关键词
-- ✅ 搜索结果实时显示 (防抖 300ms)
-- ✅ 结果包含文档名、节点类型、匹配内容片段
-- ✅ 点击结果跳转到对应文档并高亮关键词
-- ✅ 面包屑导航显示: 首页 > 规格 > 001-speckit-ui-viewer > spec.md
-- ✅ 点击面包屑可快速返回
-- ✅ 搜索响应时间 < 1s (50 个文档)
-- ✅ E2E 测试通过
+- ✅ 全局搜索框可输入关键词（Cmd+K / Ctrl+K 唤起）
+- ✅ 搜索结果实时显示（防抖 300ms）
+- ✅ 使用 Fuse.js Extended Search 进行精确匹配（`'term` 操作符）
+- ✅ 结果包含文档名、相对路径、匹配内容片段（带高亮）
+- ✅ 显示匹配数量统计（文档数、总匹配数）
+- ✅ 点击结果跳转到对应文档并高亮实际搜索匹配的文本
+- ✅ 使用 mark.js 精确高亮搜索关键词（清理 Markdown 语法后匹配）
+- ✅ 高亮永久保留（不自动消失）
+- ✅ 多个匹配项时智能定位到目标行最近的匹配项
+- ✅ 支持键盘导航（↑↓ 选择、Enter 确认、Esc 关闭）
+- ⏸️ 面包屑导航增强（待实现 T091）
+- ✅ 搜索响应时间 < 1s（50 个文档）
+- ⏸️ E2E 测试（待实现 T094）
 
 ---
 

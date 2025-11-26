@@ -1,4 +1,5 @@
 import Fuse from 'fuse.js'
+import type { FuseResultMatch } from 'fuse.js'
 import type { DocumentFile } from '../types'
 
 /**
@@ -29,16 +30,6 @@ export interface SearchMatch {
   highlightStart: number
   /** 高亮的结束位置（相对于 text） */
   highlightEnd: number
-}
-
-/**
- * Fuse.js 匹配结果
- */
-interface FuseMatch {
-  indices: [number, number][]
-  value?: string
-  key?: string
-  refIndex?: number
 }
 
 /**
@@ -169,8 +160,8 @@ export class SearchService {
    */
   private static extractMatches(
     document: DocumentFile,
-    fuseMatches: readonly FuseMatch[],
-    query: string
+    fuseMatches: readonly FuseResultMatch[],
+    _query: string
   ): SearchMatch[] {
     const matches: SearchMatch[] = []
     const content = document.content || ''

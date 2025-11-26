@@ -27,7 +27,6 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
   onClose,
   comments,
   onAddComment,
-  onEditComment,
   onDeleteComment,
   onResolveComment,
   onReopenComment,

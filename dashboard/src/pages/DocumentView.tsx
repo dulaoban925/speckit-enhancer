@@ -13,7 +13,7 @@ import Editor from "../components/document/Editor";
 import Preview from "../components/document/Preview";
 import { CommentPanel } from "../components/comment/Panel";
 import { CommentForm } from "../components/comment/Form";
-import Modal, { ModalButton } from "../components/common/Modal";
+import Modal from "../components/common/Modal";
 import { PageCenterLoading } from "../components/common/Loading";
 import type { CommentAnchor } from "../types";
 
@@ -71,7 +71,6 @@ const DocumentView: React.FC = () => {
     loading,
     error,
     refreshDocument,
-    updateMetadata,
     updateDocument,
   } = useDocument(decodedPath);
 
@@ -128,22 +127,16 @@ const DocumentView: React.FC = () => {
 
   // 未保存提示状态
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
-    null
-  );
 
   // 评论管理 Hook (只在有 featureId 和 decodedPath 时启用)
   const commentsEnabled = !!featureId && !!decodedPath;
   const {
     comments,
-    isLoading: isCommentsLoading,
-    error: commentsError,
     addComment,
     updateComment,
     deleteComment,
     resolveComment,
     reopenComment,
-    getStats,
   } = useComments({
     documentPath: decodedPath || "",
     featureId: featureId || "",
@@ -422,7 +415,6 @@ const DocumentView: React.FC = () => {
     if (isEditing && hasUnsavedChanges) {
       // 有未保存更改,显示提示
       setShowUnsavedModal(true);
-      setPendingNavigation("cancel");
     } else {
       setIsEditing(!isEditing);
       if (!isEditing && document) {
@@ -557,7 +549,6 @@ const DocumentView: React.FC = () => {
   // 处理未保存提示 - 放弃更改
   const handleDiscardChanges = useCallback(() => {
     setShowUnsavedModal(false);
-    setPendingNavigation(null);
     setIsEditing(false);
     setHasUnsavedChanges(false);
     if (document) {
@@ -568,7 +559,6 @@ const DocumentView: React.FC = () => {
   // 处理未保存提示 - 继续编辑
   const handleContinueEditing = useCallback(() => {
     setShowUnsavedModal(false);
-    setPendingNavigation(null);
   }, []);
 
   // 处理评论提交

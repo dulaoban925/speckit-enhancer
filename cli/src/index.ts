@@ -17,7 +17,7 @@ const program = new Command()
 program
   .name('speckit-enhancer')
   .description('Speckit Enhancer - CLI 工具用于启动 Dashboard 和管理项目文档')
-  .version('1.0.0')
+  .version('1.0.2')
   .alias('ske')
 
 // ==================== Dashboard 命令组 ====================

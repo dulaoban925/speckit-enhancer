@@ -5,7 +5,7 @@ import { marked } from 'marked'
  * 使用 Marked.js 渲染 Markdown 为 HTML
  */
 export class MarkdownService {
-  private static renderer: marked.Renderer
+  private static renderer: InstanceType<typeof marked.Renderer>
 
   /**
    * 初始化 Marked 配置
@@ -16,21 +16,19 @@ export class MarkdownService {
       gfm: true, // 启用 GitHub Flavored Markdown
       breaks: true, // 支持换行符转换为 <br>
       pedantic: false,
-      smartLists: true,
-      smartypants: false,
     })
 
     // 自定义渲染器
     this.renderer = new marked.Renderer()
 
     // 自定义代码块渲染 (添加语言标签)
-    this.renderer.code = (code, language) => {
+    this.renderer.code = (code: string, language: string | undefined) => {
       const lang = language || 'text'
       return `<pre><code class="language-${lang}">${this.escapeHtml(code)}</code></pre>`
     }
 
     // 自定义链接渲染 (添加 target="_blank" 用于外部链接)
-    this.renderer.link = (href, title, text) => {
+    this.renderer.link = (href: string, title: string | null | undefined, text: string) => {
       const isExternal = href.startsWith('http://') || href.startsWith('https://')
       const target = isExternal ? ' target="_blank" rel="noopener noreferrer"' : ''
       const titleAttr = title ? ` title="${title}"` : ''
@@ -38,7 +36,7 @@ export class MarkdownService {
     }
 
     // 自定义表格渲染 (添加 GitHub 样式类)
-    this.renderer.table = (header, body) => {
+    this.renderer.table = (header: string, body: string) => {
       return `<table class="markdown-table">
         <thead>${header}</thead>
         <tbody>${body}</tbody>
@@ -46,7 +44,7 @@ export class MarkdownService {
     }
 
     // 自定义列表项渲染 (支持任务列表)
-    this.renderer.listitem = (text, task, checked) => {
+    this.renderer.listitem = (text: string, task: boolean, checked: boolean) => {
       if (task) {
         const checkbox = checked
           ? '<input type="checkbox" checked disabled class="task-list-item-checkbox">'
@@ -57,7 +55,7 @@ export class MarkdownService {
     }
 
     // 自定义列表渲染 (添加任务列表类)
-    this.renderer.list = (body, ordered, start) => {
+    this.renderer.list = (body: string, ordered: boolean, start: number) => {
       const type = ordered ? 'ol' : 'ul'
       const startAttr = ordered && start !== 1 ? ` start="${start}"` : ''
       const hasTaskList = body.includes('task-list-item')

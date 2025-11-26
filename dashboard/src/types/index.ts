@@ -43,6 +43,13 @@ export interface DocumentNode {
   order: number
 }
 
+export interface DocumentMetadata {
+  actualMtime?: number
+  lastModified?: number
+  size?: number
+  [key: string]: number | undefined
+}
+
 export interface DocumentFile {
   path: string
   relativePath: string
@@ -55,6 +62,7 @@ export interface DocumentFile {
   lineCount?: number
   comments: Comment[]
   isDirectory: boolean
+  metadata?: DocumentMetadata
 }
 
 export interface CommentAnchor {

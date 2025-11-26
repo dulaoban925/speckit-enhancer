@@ -5,12 +5,14 @@ import { logger, LogLevel } from '../utils/logger.js'
 import { PathResolver } from '../utils/pathResolver.js'
 import { ValidationService } from '../services/validation.js'
 import { PortFinderService } from '../services/portFinder.js'
+import { StaticServer } from '../services/staticServer.js'
 
 interface ServeOptions {
   port: string
   host: string
   open: boolean
   verbose: boolean
+  dev?: boolean  // 开发模式标志（内部使用）
 }
 
 export async function serveCommand(
@@ -73,62 +75,92 @@ export async function serveCommand(
       process.exit(1)
     }
 
-    // 3. 检查 dashboard 目录
-    const dashboardPath = path.join(path.dirname(new URL(import.meta.url).pathname), '../../../dashboard')
-    const resolvedDashboardPath = path.resolve(dashboardPath)
-
-    if (!existsSync(resolvedDashboardPath)) {
-      logger.error('❌ 找不到 dashboard 目录')
-      logger.error(`预期路径: ${resolvedDashboardPath}`)
-      logger.info('\n💡 提示: 请确保 CLI 和 Dashboard 正确安装')
-      process.exit(1)
-    }
-
-    // 4. 启动 Vite 开发服务器
+    // 3. 判断运行模式：开发模式 vs 生产模式
+    const isDevMode = options.dev === true
     const url = `http://${options.host}:${finalPort}`
+
     logger.info('\n🚀 启动 Speckit Enhancer 服务器...')
     logger.info(`📂 项目: ${absoluteProjectPath}`)
     logger.info(`🌐 地址: ${url}`)
+    logger.info(`🔧 模式: ${isDevMode ? '开发模式' : '生产模式'}`)
     logger.info('')
 
-    const viteProcess = spawn('npm', ['run', 'dev', '--', '--port', String(finalPort), '--host', options.host], {
-      cwd: resolvedDashboardPath,
-      stdio: 'inherit',
-      shell: true,
-      env: {
-        ...process.env,
-        SPECKIT_PROJECT_PATH: absoluteProjectPath,
-      },
-    })
+    if (isDevMode) {
+      // ========== 开发模式：启动 Vite 开发服务器 ==========
+      const dashboardPath = path.join(path.dirname(new URL(import.meta.url).pathname), '../../../dashboard')
+      const resolvedDashboardPath = path.resolve(dashboardPath)
 
-    // 监听进程事件
-    viteProcess.on('error', (error) => {
-      logger.error('❌ 启动服务器失败:', error)
-      process.exit(1)
-    })
-
-    viteProcess.on('exit', (code) => {
-      if (code !== 0) {
-        logger.error(`服务器退出,退出码: ${code}`)
-        process.exit(code || 1)
+      if (!existsSync(resolvedDashboardPath)) {
+        logger.error('❌ 找不到 dashboard 目录')
+        logger.error(`预期路径: ${resolvedDashboardPath}`)
+        logger.info('\n💡 提示: 开发模式需要源代码')
+        process.exit(1)
       }
-    })
 
-    // 自动打开浏览器
-    if (options.open) {
-      setTimeout(() => {
-        const openCommand = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open'
-        spawn(openCommand, [url], { detached: true, stdio: 'ignore' }).unref()
-        logger.success(`✓ 已在浏览器打开: ${url}`)
-      }, 2000) // 等待 2 秒让服务器启动
+      const viteProcess = spawn('npm', ['run', 'dev', '--', '--port', String(finalPort), '--host', options.host], {
+        cwd: resolvedDashboardPath,
+        stdio: 'inherit',
+        shell: true,
+        env: {
+          ...process.env,
+          SPECKIT_PROJECT_PATH: absoluteProjectPath,
+        },
+      })
+
+      // 监听进程事件
+      viteProcess.on('error', (error) => {
+        logger.error('❌ 启动服务器失败:', error)
+        process.exit(1)
+      })
+
+      viteProcess.on('exit', (code) => {
+        if (code !== 0) {
+          logger.error(`服务器退出,退出码: ${code}`)
+          process.exit(code || 1)
+        }
+      })
+
+      // 自动打开浏览器
+      if (options.open) {
+        setTimeout(() => {
+          const openCommand = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open'
+          spawn(openCommand, [url], { detached: true, stdio: 'ignore' }).unref()
+          logger.success(`✓ 已在浏览器打开: ${url}`)
+        }, 2000) // 等待 2 秒让服务器启动
+      }
+
+      // 监听 Ctrl+C 退出
+      process.on('SIGINT', () => {
+        logger.info('\n\n⏹ 正在停止服务器...')
+        viteProcess.kill('SIGINT')
+        process.exit(0)
+      })
+
+    } else {
+      // ========== 生产模式：提供静态文件服务 ==========
+      try {
+        // 设置环境变量供前端使用
+        process.env.SPECKIT_PROJECT_PATH = absoluteProjectPath
+
+        // 启动静态文件服务器
+        await StaticServer.start(finalPort, options.host, absoluteProjectPath)
+
+        // 自动打开浏览器
+        if (options.open) {
+          setTimeout(() => {
+            const openCommand = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open'
+            spawn(openCommand, [url], { detached: true, stdio: 'ignore' }).unref()
+            logger.success(`✓ 已在浏览器打开: ${url}`)
+          }, 1000)
+        }
+      } catch (error) {
+        logger.error('❌ 启动静态服务器失败')
+        if (error instanceof Error) {
+          logger.error(error.message)
+        }
+        process.exit(1)
+      }
     }
-
-    // 监听 Ctrl+C 退出
-    process.on('SIGINT', () => {
-      logger.info('\n\n⏹ 正在停止服务器...')
-      viteProcess.kill('SIGINT')
-      process.exit(0)
-    })
 
   } catch (error) {
     logger.error('❌ 启动服务失败')

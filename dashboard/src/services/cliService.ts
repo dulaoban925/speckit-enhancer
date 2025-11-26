@@ -97,7 +97,7 @@ export class CLIService {
    */
   static watchFile(
     filePath: string,
-    callback: (event: 'change' | 'rename') => void
+    _callback: (event: 'change' | 'rename') => void
   ): () => void {
     // TODO: 实现文件监听
     console.log(`开始监听文件: ${filePath}`)

@@ -1,11 +1,9 @@
 import React from 'react'
 import Modal from './Modal'
 import {
-  ALL_SHORTCUTS,
   CATEGORY_NAMES,
   formatShortcut,
   getShortcutsByCategory,
-  type KeyboardShortcut,
 } from '../../hooks/useKeyboardShortcuts'
 
 interface KeyboardShortcutsHelpProps {

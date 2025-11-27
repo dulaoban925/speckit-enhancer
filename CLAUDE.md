@@ -67,6 +67,8 @@ Key bash scripts in `.specify/scripts/bash/`:
 ## Active Technologies
 - Node.js 18+ (LTS), TypeScript 5.x + React 18, Vite 5, Marked.js (Markdown 渲染), Prism.js (语法高亮), Commander.js (CLI 框架) (001-speckit-ui-viewer)
 - 本地文件系统 (`.specify/memory/comments/` 用于评论存储,JSON 格式) (001-speckit-ui-viewer)
+- TypeScript 5.x + React 18, Vite 5, Recharts 2.x, date-fns 4.x, jsPDF 2.x, papaparse 5.x, react-window 1.x, Zustand 4.x (状态管理) (002-feature-dashboard)
+- 本地文件系统(specs/[feature-id]/, .specify/memory/comments/) (002-feature-dashboard)
 
 ## Recent Changes
 - 001-speckit-ui-viewer: Added Node.js 18+ (LTS), TypeScript 5.x + React 18, Vite 5, Marked.js (Markdown 渲染), Prism.js (语法高亮), Commander.js (CLI 框架)

@@ -89,7 +89,7 @@ const Home: React.FC = () => {
                         <div
                           key={feature.id}
                           className="bg-gh-canvas-default border border-gh-border-default rounded-lg p-4 hover:border-gh-accent-fg transition-colors cursor-pointer"
-                          onClick={() => navigate(`/feature/${feature.id}`)}
+                          onClick={() => navigate(`/feature/${feature.id}/dashboard`)}
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center gap-2">

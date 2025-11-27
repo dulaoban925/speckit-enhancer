@@ -103,13 +103,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   <summary className="cursor-pointer text-gh-accent-fg hover:underline mb-2">
                     查看错误详情
                   </summary>
-                  <div className="bg-gh-canvas-default p-4 rounded-md border border-gh-border-default">
+                  <div className="bg-gh-canvas-default p-4 rounded-md border border-gh-border-default overflow-hidden">
                     <div className="text-sm font-mono">
-                      <div className="text-gh-danger-fg font-semibold mb-2">
+                      <div className="text-gh-danger-fg font-semibold mb-2 break-words overflow-wrap-anywhere">
                         {this.state.error.name}: {this.state.error.message}
                       </div>
                       {this.state.error.stack && (
-                        <pre className="text-gh-fg-muted overflow-x-auto text-xs whitespace-pre-wrap break-words">
+                        <pre className="text-gh-fg-muted overflow-x-auto text-xs whitespace-pre-wrap break-words max-w-full">
                           {this.state.error.stack}
                         </pre>
                       )}

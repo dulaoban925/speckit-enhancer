@@ -63,7 +63,7 @@ export class ProjectModel {
             .map((entry) => {
               const match = entry.name.match(/^(\d{3})-(.+)$/);
               return {
-                id: match?.[1] || "000",
+                id: entry.name, // Use full directory name as ID (e.g., "002-feature-dashboard")
                 name: match?.[2] || entry.name,
                 path: path.join(specsDir, entry.name),
               };

@@ -3,6 +3,7 @@ import { ToastProvider } from './contexts/ToastContext'
 import ErrorBoundary from './components/common/ErrorBoundary'
 import Home from './pages/Home'
 import DocumentView from './pages/DocumentView'
+import FeatureDashboard from './pages/FeatureDashboard'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/document/*" element={<DocumentView />} />
+            <Route path="/feature/:id/dashboard" element={<FeatureDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>

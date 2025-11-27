@@ -3,6 +3,7 @@
  * 显示协作活跃度指标：评论统计、问题跟踪、参与者和活跃文档
  */
 
+import { useNavigate } from 'react-router-dom'
 import type { CollaborationMetrics } from '../types/metrics'
 
 interface CollaborationPanelProps {
@@ -26,11 +27,16 @@ export default function CollaborationPanel({ metrics }: CollaborationPanelProps)
 
   // 转换 byDocument 为活跃文档列表
   const activeDocuments = Object.entries(byDocument)
-    .map(([name, commentCount]) => ({
-      name,
-      path: `specs/${name}`,
-      commentCount,
-    }))
+    .map(([documentPath, commentCount]) => {
+      // documentPath 已经是完整路径，如 "specs/001-speckit-ui-viewer/spec.md"
+      // 提取文档名称用于显示
+      const name = documentPath.split('/').pop() || documentPath
+      return {
+        name,
+        path: documentPath,
+        commentCount,
+      }
+    })
     .sort((a, b) => b.commentCount - a.commentCount)
     .slice(0, 5)
 
@@ -50,13 +56,13 @@ export default function CollaborationPanel({ metrics }: CollaborationPanelProps)
         {/* 评论总数 */}
         <div className="bg-blue-50 rounded-lg p-4">
           <div className="text-sm text-blue-600 font-medium mb-1">评论总数</div>
-          <div className="text-2xl font-bold text-blue-900">{totalComments}</div>
+          <div className="text-xl font-bold text-blue-900">{totalComments}</div>
         </div>
 
         {/* 本周增长 */}
         <div className="bg-green-50 rounded-lg p-4">
           <div className="text-sm text-green-600 font-medium mb-1">本周增长</div>
-          <div className="text-2xl font-bold text-green-900">
+          <div className="text-lg font-bold text-green-900 leading-tight">
             {weeklyGrowth >= 0 ? '+' : ''}
             {weeklyGrowth.toFixed(1)}%
           </div>
@@ -65,13 +71,13 @@ export default function CollaborationPanel({ metrics }: CollaborationPanelProps)
         {/* 未解决问题 */}
         <div className="bg-yellow-50 rounded-lg p-4">
           <div className="text-sm text-yellow-600 font-medium mb-1">未解决</div>
-          <div className="text-2xl font-bold text-yellow-900">{unresolvedIssues}</div>
+          <div className="text-xl font-bold text-yellow-900">{unresolvedIssues}</div>
         </div>
 
         {/* 阻塞问题 */}
         <div className="bg-red-50 rounded-lg p-4">
           <div className="text-sm text-red-600 font-medium mb-1">阻塞中</div>
-          <div className="text-2xl font-bold text-red-900">{blockingIssues}</div>
+          <div className="text-xl font-bold text-red-900">{blockingIssues}</div>
         </div>
       </div>
 
@@ -201,6 +207,13 @@ interface ActiveDocumentRowProps {
 }
 
 function ActiveDocumentRow({ doc }: ActiveDocumentRowProps) {
+  const navigate = useNavigate()
+
+  const handleViewDocument = () => {
+    // 导航到文档查看器，使用文档路径
+    navigate(`/document/${doc.path}`)
+  }
+
   return (
     <div className="flex items-center justify-between py-2 px-3 bg-gh-canvas-subtle rounded hover:bg-gh-canvas-default border border-gh-border-default transition-colors">
       <div className="flex items-center gap-2">
@@ -210,10 +223,7 @@ function ActiveDocumentRow({ doc }: ActiveDocumentRowProps) {
       <div className="flex items-center gap-3">
         <span className="text-sm text-gh-fg-muted">{doc.commentCount} 条评论</span>
         <button
-          onClick={() => {
-            // TODO: 导航到文档查看器
-            console.log('Navigate to:', doc.path)
-          }}
+          onClick={handleViewDocument}
           className="px-2 py-1 text-xs text-gh-accent-fg hover:bg-gh-accent-subtle rounded transition-colors"
         >
           查看

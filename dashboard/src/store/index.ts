@@ -30,6 +30,10 @@ interface AppState {
   sidebarCollapsed: boolean
   toggleSidebar: () => void
 
+  // 侧边栏展开状态
+  expandedFeatures: Set<string>
+  toggleFeatureExpansion: (featureId: string) => void
+
   // 加载状态
   loading: boolean
   setLoading: (loading: boolean) => void
@@ -59,6 +63,7 @@ export const useAppStore = create<AppState>()(
       editContent: '',
       isDirty: false,
       sidebarCollapsed: false,
+      expandedFeatures: new Set<string>(),
       loading: false,
       error: null,
 
@@ -91,6 +96,17 @@ export const useAppStore = create<AppState>()(
 
       toggleSidebar: () =>
         set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed }), false, 'toggleSidebar'),
+
+      toggleFeatureExpansion: (featureId) =>
+        set((state) => {
+          const next = new Set(state.expandedFeatures)
+          if (next.has(featureId)) {
+            next.delete(featureId)
+          } else {
+            next.add(featureId)
+          }
+          return { expandedFeatures: next }
+        }, false, 'toggleFeatureExpansion'),
 
       setLoading: (loading) => set({ loading }, false, 'setLoading'),
 

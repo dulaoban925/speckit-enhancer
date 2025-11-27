@@ -30,7 +30,7 @@ export default function RiskPanel({ metrics }: RiskPanelProps) {
       {/* 阻塞问题 */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-gray-700">阻塞问题</h3>
+          <h3 className="text-sm font-medium text-gh-fg-muted">阻塞问题</h3>
           <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded">
             {blockingIssues.length}
           </span>
@@ -40,7 +40,7 @@ export default function RiskPanel({ metrics }: RiskPanelProps) {
             <BlockingIssueRow key={issue.id} issue={issue} />
           ))}
           {blockingIssues.length === 0 && (
-            <div className="text-sm text-gray-400 text-center py-3 bg-gray-50 rounded">
+            <div className="text-sm text-gh-fg-muted text-center py-3 bg-gh-canvas-default rounded">
               ✓ 无阻塞问题
             </div>
           )}
@@ -50,7 +50,7 @@ export default function RiskPanel({ metrics }: RiskPanelProps) {
       {/* 陈旧文档 */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-gray-700">陈旧文档</h3>
+          <h3 className="text-sm font-medium text-gh-fg-muted">陈旧文档</h3>
           <span className="text-xs font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded">
             {staleDocuments.length}
           </span>
@@ -60,7 +60,7 @@ export default function RiskPanel({ metrics }: RiskPanelProps) {
             <StaleDocumentRow key={doc.id} doc={doc} />
           ))}
           {staleDocuments.length === 0 && (
-            <div className="text-sm text-gray-400 text-center py-3 bg-gray-50 rounded">
+            <div className="text-sm text-gh-fg-muted text-center py-3 bg-gh-canvas-default rounded">
               ✓ 文档都很新鲜
             </div>
           )}
@@ -70,7 +70,7 @@ export default function RiskPanel({ metrics }: RiskPanelProps) {
       {/* 关键路径 */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-gray-700">关键路径</h3>
+          <h3 className="text-sm font-medium text-gh-fg-muted">关键路径</h3>
           <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
             {criticalPaths.length}
           </span>
@@ -80,7 +80,7 @@ export default function RiskPanel({ metrics }: RiskPanelProps) {
             <CriticalPathRow key={index} path={path} />
           ))}
           {criticalPaths.length === 0 && (
-            <div className="text-sm text-gray-400 text-center py-3 bg-gray-50 rounded">
+            <div className="text-sm text-gh-fg-muted text-center py-3 bg-gh-canvas-default rounded">
               暂无关键路径数据
             </div>
           )}

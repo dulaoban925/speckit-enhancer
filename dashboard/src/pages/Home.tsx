@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProject } from '../hooks/useProject'
 import { useDeferredLoading } from '../hooks/useDeferredLoading'
+import { useAppStore } from '../store'
 import Layout from '../components/layout/Layout'
 import Button from '../components/common/Button'
 import { PageCenterLoading } from '../components/common/Loading'
@@ -10,6 +11,12 @@ const Home: React.FC = () => {
   const { project, loading, error } = useProject()
   const deferredLoading = useDeferredLoading(loading)
   const navigate = useNavigate()
+  const setCurrentDocument = useAppStore((state) => state.setCurrentDocument)
+
+  // 返回首页时清空当前文档选中状态
+  useEffect(() => {
+    setCurrentDocument(null)
+  }, [])
 
   return (
     <Layout showSidebar={true} enableSearch={true}>

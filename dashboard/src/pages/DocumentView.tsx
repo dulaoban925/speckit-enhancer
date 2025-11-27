@@ -8,6 +8,7 @@ import { useDeferredLoading } from "../hooks/useDeferredLoading";
 import { useToast } from "../contexts/ToastContext";
 import { CLIService } from "../services/cliService";
 import { CommentHighlighter } from "../services/commentHighlighter";
+import Layout from "../components/layout/Layout";
 import Viewer from "../components/document/Viewer";
 import Editor from "../components/document/Editor";
 import Preview from "../components/document/Preview";
@@ -627,90 +628,76 @@ const DocumentView: React.FC = () => {
     });
   };
 
-  // 加载状态
-  if (deferredLoading) {
-    return <PageCenterLoading message="加载文档中..." fullHeight />;
-  }
-
-  // 错误状态
-  if (error) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-gh-canvas-default p-8">
-        <div className="text-center max-w-md">
-          <svg
-            className="w-16 h-16 text-gh-danger-fg mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
-          <h2 className="text-xl font-semibold text-gh-danger-fg mb-2">
-            加载失败
-          </h2>
-          <p className="text-gh-fg-muted mb-4">{error}</p>
-          <button
-            onClick={refreshDocument}
-            className="px-4 py-2 bg-gh-btn-bg text-gh-btn-text rounded-md hover:bg-gh-btn-hover-bg transition-colors"
-          >
-            重试
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 文档未找到（只在加载完成且没有错误时显示）
-  if (!document && !loading && !error) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-gh-canvas-default p-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gh-fg-default mb-2">
-            文档未找到
-          </h2>
-          <p className="text-gh-fg-muted">请从侧边栏选择要查看的文档</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 类型保护：确保 document 不为 null
-  if (!document) {
-    return null;
-  }
-
-  // 正常渲染文档
+  // 始终使用 Layout 包裹，避免整页重渲染
   return (
-    <div className="flex-1 flex flex-col bg-gh-canvas-default overflow-hidden">
-      {/* 文档头部 */}
-      <div className="border-b border-gh-border-default bg-gh-canvas-subtle">
+    <Layout showSidebar={true} enableSearch={true}>
+      <>
+      {/* 加载状态 */}
+      {deferredLoading && (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="text-gh-fg-muted">加载文档中...</div>
+          </div>
+        </div>
+      )}
+
+      {/* 错误状态 */}
+      {error && !deferredLoading && (
+        <div className="flex items-center justify-center h-full p-8">
+          <div className="text-center max-w-md">
+            <svg
+              className="w-16 h-16 text-gh-danger-fg mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <h2 className="text-xl font-semibold text-gh-danger-fg mb-2">
+              加载失败
+            </h2>
+            <p className="text-gh-fg-muted mb-4">{error}</p>
+            <button
+              onClick={refreshDocument}
+              className="px-4 py-2 bg-gh-btn-bg text-gh-btn-text rounded-md hover:bg-gh-btn-hover-bg transition-colors"
+            >
+              重试
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 文档未找到 */}
+      {!document && !loading && !error && !deferredLoading && (
+        <div className="flex items-center justify-center h-full p-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold text-gh-fg-default mb-2">
+              文档未找到
+            </h2>
+            <p className="text-gh-fg-muted">请从侧边栏选择要查看的文档</p>
+          </div>
+        </div>
+      )}
+
+      {/* 正常渲染文档 */}
+      {document && !deferredLoading && !error && (
+      <div className="flex flex-col h-full bg-gh-canvas-default overflow-hidden">
+      {/* 文档头部 - 固定区域 */}
+      <div className="flex-shrink-0 border-b border-gh-border-default bg-gh-canvas-subtle">
         <div className="px-8 py-4">
           {/* 面包屑导航 */}
           <nav className="flex items-center gap-2 text-sm mb-3">
             {/* 首页按钮 */}
             <button
               onClick={handleHomeClick}
-              className="text-gh-accent-fg hover:underline flex items-center gap-1"
+              className="text-gh-accent-fg hover:underline"
               title="返回首页"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
               首页
             </button>
 
@@ -878,7 +865,7 @@ const DocumentView: React.FC = () => {
         </div>
       </div>
 
-      {/* 文档内容 */}
+      {/* 文档内容 - 可滚动区域 */}
       {!isEditing ? (
         <div
           className="flex-1 overflow-y-auto relative"
@@ -911,7 +898,7 @@ const DocumentView: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="flex-1 grid grid-cols-2 gap-0">
+        <div className="flex-1 overflow-hidden grid grid-cols-2 gap-0">
           <Editor
             content={editContent}
             onChange={handleContentChange}
@@ -1084,7 +1071,10 @@ const DocumentView: React.FC = () => {
           </div>
         </div>
       </Modal>
-    </div>
+      </div>
+      )}
+      </>
+    </Layout>
   );
 };
 

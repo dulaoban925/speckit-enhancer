@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { DocumentMetrics, DocumentInfo } from '../types/metrics'
 import { formatRelativeTime } from '../utils/dateHelpers'
 
@@ -125,12 +126,19 @@ export default function DocumentHealthPanel({ metrics }: DocumentHealthPanelProp
  * 文档行组件
  */
 function DocumentRow({ doc }: { doc: DocumentInfo }) {
+  const navigate = useNavigate()
+
   const statusColor =
     doc.status === 'ok'
       ? 'text-gh-success-emphasis'
       : doc.status === 'stale'
       ? 'text-yellow-600'
       : 'text-gh-danger-emphasis'
+
+  const handleViewDocument = () => {
+    // 导航到文档查看器，使用文档路径
+    navigate(`/document/${doc.path}`)
+  }
 
   return (
     <div className="py-3 flex items-center justify-between hover:bg-gh-canvas-default px-2 rounded transition-colors">
@@ -153,10 +161,7 @@ function DocumentRow({ doc }: { doc: DocumentInfo }) {
       </div>
       {doc.exists && (
         <button
-          onClick={() => {
-            // TODO: 导航到文档查看器
-            console.log('Navigate to:', doc.path)
-          }}
+          onClick={handleViewDocument}
           className="px-3 py-1 text-sm text-gh-accent-fg hover:bg-gh-canvas-default rounded transition-colors"
         >
           查看

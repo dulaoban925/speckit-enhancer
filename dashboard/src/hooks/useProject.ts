@@ -1,17 +1,25 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useAppStore } from '../store'
 import { CLIService } from '../services/cliService'
 
 /**
  * 项目加载 Hook
  * 负责在应用启动时加载项目数据
+ * 只会在 project 为 null 时加载一次，避免重复请求
  */
 export function useProject() {
-  const { project, setProject, setLoading, setError } = useAppStore()
+  const { project, setProject, setLoading, setError, loading } = useAppStore()
+  const hasLoadedRef = useRef(false)
 
   useEffect(() => {
+    // 如果项目已加载或正在加载，跳过
+    if (project || loading || hasLoadedRef.current) {
+      return
+    }
+
+    hasLoadedRef.current = true
     loadProject()
-  }, [])
+  }, [project, loading])
 
   const loadProject = async () => {
     try {
@@ -34,6 +42,7 @@ export function useProject() {
   }
 
   const refreshProject = async () => {
+    hasLoadedRef.current = false
     await loadProject()
   }
 

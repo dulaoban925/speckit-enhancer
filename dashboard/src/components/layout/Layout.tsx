@@ -135,13 +135,21 @@ const Layout: React.FC<LayoutProps> = ({
   }, [enableSearch, handleSearchOpen])
 
   return (
-    <div className="min-h-screen bg-gh-canvas-default flex flex-col">
+    <div className="h-screen bg-gh-canvas-default flex flex-col overflow-hidden">
+      {/* 固定 Header */}
       <Header onSearchClick={enableSearch ? handleSearchOpen : undefined} />
 
+      {/* 主内容区域 - Sidebar + Main */}
       <div className="flex flex-1 overflow-hidden">
-        {showSidebar && <Sidebar />}
+        {/* 固定 Sidebar - 不滚动 */}
+        {showSidebar && (
+          <div className="flex-shrink-0 overflow-hidden">
+            <Sidebar />
+          </div>
+        )}
 
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        {/* 主内容区域 - 可滚动 */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">{children}</main>
       </div>
 
       {/* 搜索组件 */}

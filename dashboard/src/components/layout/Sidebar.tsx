@@ -1,27 +1,14 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../../store'
 import DocumentList from '../document/DocumentList'
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate()
-  const { project, sidebarCollapsed, currentDocument } = useAppStore()
-  const [expandedFeatures, setExpandedFeatures] = useState<Set<string>>(new Set())
+  const { project, sidebarCollapsed, currentDocument, expandedFeatures, toggleFeatureExpansion } = useAppStore()
 
   if (sidebarCollapsed) {
     return null
-  }
-
-  const toggleFeature = (featureId: string) => {
-    setExpandedFeatures((prev) => {
-      const next = new Set(prev)
-      if (next.has(featureId)) {
-        next.delete(featureId)
-      } else {
-        next.add(featureId)
-      }
-      return next
-    })
   }
 
   const handleDocumentClick = (documentPath: string) => {
@@ -29,9 +16,10 @@ const Sidebar: React.FC = () => {
   }
 
   return (
-    <aside className="w-64 bg-gh-canvas-default border-r border-gh-border-default overflow-y-auto">
-      <div className="p-4">
-        <h2 className="text-lg font-semibold text-gh-fg-default mb-4">项目文档</h2>
+    <aside className="w-64 h-full bg-gh-canvas-default border-r border-gh-border-default flex flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-4">
+          <h2 className="text-lg font-semibold text-gh-fg-default mb-4">项目文档</h2>
 
         {/* 宪章 */}
         {project?.constitution && (
@@ -64,7 +52,7 @@ const Sidebar: React.FC = () => {
                 <div key={feature.id} className="space-y-1">
                   {/* 特性标题 */}
                   <button
-                    onClick={() => toggleFeature(feature.id)}
+                    onClick={() => toggleFeatureExpansion(feature.id)}
                     className="w-full flex items-center justify-between px-3 py-2 hover:bg-gh-canvas-subtle rounded-md transition-colors text-left"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -109,6 +97,7 @@ const Sidebar: React.FC = () => {
         ) : (
           <p className="text-gh-fg-muted text-sm">暂无特性</p>
         )}
+      </div>
       </div>
     </aside>
   )

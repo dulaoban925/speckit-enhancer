@@ -46,19 +46,18 @@ export function parseTasksFile(content: string): {
 
       // 提取用户故事标签 [US1], [US2], etc.
       const storyMatch = taskText.match(/\[US(\d+)\]/)
-      const userStory = storyMatch ? `US${storyMatch[1]}` : null
+      const userStory = storyMatch ? `US${storyMatch[1]}` : undefined
 
       // 提取并行标记 [P]
       const isParallel = /\[P\]/.test(taskText)
 
       tasks.push({
         id: taskId,
-        title: taskText,
+        description: taskText,
         status: isCompleted ? 'completed' : 'pending',
         phase: currentPhase,
         userStory,
-        isParallel,
-        dependencies: [],
+        parallel: isParallel,
       })
     }
   }

@@ -1,5 +1,10 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useParams, useNavigate, useLocation, useBeforeUnload } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+  useBeforeUnload,
+} from "react-router-dom";
 import { useDocument } from "../hooks/useDocuments";
 import { useFileWatch } from "../hooks/useFileWatch";
 import { useComments } from "../hooks/useComments";
@@ -15,7 +20,6 @@ import Preview from "../components/document/Preview";
 import { CommentPanel } from "../components/comment/Panel";
 import { CommentForm } from "../components/comment/Form";
 import Modal from "../components/common/Modal";
-import { PageCenterLoading } from "../components/common/Loading";
 import type { CommentAnchor } from "../types";
 
 // 简单的路径解析（纯函数，移到组件外部避免重复创建）
@@ -45,9 +49,9 @@ const DocumentView: React.FC = () => {
   // 从 URL hash 中解析目标行号和匹配文本（格式：#L123 或 #L123:text=匹配文本）
   const { targetLine, targetText } = React.useMemo(() => {
     const hash = location.hash;
-    if (hash.startsWith('#L')) {
+    if (hash.startsWith("#L")) {
       // 检查是否包含文本信息
-      const colonIndex = hash.indexOf(':text=');
+      const colonIndex = hash.indexOf(":text=");
       if (colonIndex > 0) {
         // 格式: #L123:text=匹配文本
         const lineNum = parseInt(hash.substring(2, colonIndex), 10);
@@ -67,13 +71,8 @@ const DocumentView: React.FC = () => {
     }
     return { targetLine: undefined, targetText: undefined };
   }, [location.hash]);
-  const {
-    document,
-    loading,
-    error,
-    refreshDocument,
-    updateDocument,
-  } = useDocument(decodedPath);
+  const { document, loading, error, refreshDocument, updateDocument } =
+    useDocument(decodedPath);
 
   const deferredLoading = useDeferredLoading(loading);
 
@@ -91,14 +90,14 @@ const DocumentView: React.FC = () => {
     }
 
     // 系统文档（.specify/memory/ 下的文档）使用 "system" 作为 featureId
-    if (decodedPath.startsWith('.specify/memory/')) {
-      return 'system';
+    if (decodedPath.startsWith(".specify/memory/")) {
+      return "system";
     }
 
     // 其他文档：为了支持评论，生成一个基于路径的 ID
     // 例如: "README.md" -> "root"
-    if (decodedPath === 'README.md' || !decodedPath.includes('/')) {
-      return 'root';
+    if (decodedPath === "README.md" || !decodedPath.includes("/")) {
+      return "root";
     }
 
     // 默认返回空字符串（不支持评论）
@@ -150,25 +149,28 @@ const DocumentView: React.FC = () => {
       containerRef: viewerContainerRef,
       enabled: !isEditing && commentsEnabled,
       onSelectionChange: (newSelection) => {
-        console.log('[DocumentView] onSelectionChange 回调触发:', {
+        console.log("[DocumentView] onSelectionChange 回调触发:", {
           hasSelection: !!newSelection,
           hasDocument: !!document,
-          text: newSelection?.text
+          text: newSelection?.text,
         });
 
         // 文本选中后自动打开评论表单
         if (newSelection && document && document.content) {
-          console.log('[DocumentView] 创建评论锚点...');
+          console.log("[DocumentView] 创建评论锚点...");
           // 传递 newSelection 给 createAnchorFromSelection，而不是依赖状态
-          const anchor = createAnchorFromSelection(document.content, newSelection);
-          console.log('[DocumentView] 锚点创建结果:', anchor);
+          const anchor = createAnchorFromSelection(
+            document.content,
+            newSelection
+          );
+          console.log("[DocumentView] 锚点创建结果:", anchor);
 
           if (anchor) {
-            console.log('[DocumentView] 设置锚点并打开表单');
+            console.log("[DocumentView] 设置锚点并打开表单");
             setSelectedAnchor(anchor);
             setShowCommentForm(true);
           } else {
-            console.error('[DocumentView] 创建锚点失败');
+            console.error("[DocumentView] 创建锚点失败");
           }
         }
       },
@@ -179,41 +181,56 @@ const DocumentView: React.FC = () => {
 
   // 注入评论标记到 DOM (预览模式)
   useEffect(() => {
-    if (!isEditing && commentsEnabled && viewerContainerRef.current && comments.length > 0) {
+    if (
+      !isEditing &&
+      commentsEnabled &&
+      viewerContainerRef.current &&
+      comments.length > 0
+    ) {
       const container = viewerContainerRef.current;
       let isInjecting = false; // 标志：是否正在注入标记
       let debounceTimer: NodeJS.Timeout | null = null;
 
       // 检测评论变化类型
-      const currentCommentsMap = new Map(comments.map(c => [c.id, c.status]));
+      const currentCommentsMap = new Map(comments.map((c) => [c.id, c.status]));
       const prevCommentsMap = prevCommentsRef.current;
 
       // 检查是否只是状态更新（评论 ID 没变，只是状态变了）
       const commentIds = new Set([...currentCommentsMap.keys()]);
       const prevCommentIds = new Set([...prevCommentsMap.keys()]);
-      const idsMatch = commentIds.size === prevCommentIds.size &&
-        [...commentIds].every(id => prevCommentIds.has(id));
+      const idsMatch =
+        commentIds.size === prevCommentIds.size &&
+        [...commentIds].every((id) => prevCommentIds.has(id));
 
       if (idsMatch && prevCommentsMap.size > 0) {
         // 只是状态更新，检查标记是否仍然存在
-        console.log('[DocumentView] 检测到评论状态更新，只更新样式');
+        console.log("[DocumentView] 检测到评论状态更新，只更新样式");
 
         // 检查 DOM 中是否有评论标记
-        const existingMarkers = container.querySelectorAll('.comment-highlight');
-        console.log(`[DocumentView] DOM 中现有标记数量: ${existingMarkers.length}`);
+        const existingMarkers =
+          container.querySelectorAll(".comment-highlight");
+        console.log(
+          `[DocumentView] DOM 中现有标记数量: ${existingMarkers.length}`
+        );
 
         if (existingMarkers.length === 0) {
           // 标记不存在，可能被清除了，需要重新注入
-          console.log('[DocumentView] 标记已被清除，转为完整注入流程');
+          console.log("[DocumentView] 标记已被清除，转为完整注入流程");
           prevCommentsRef.current = currentCommentsMap;
           // 不 return，继续执行下面的注入逻辑
         } else {
           // 标记存在，只更新样式
-          comments.forEach(comment => {
+          comments.forEach((comment) => {
             const prevStatus = prevCommentsMap.get(comment.id);
             if (prevStatus && prevStatus !== comment.status) {
-              console.log(`[DocumentView] 更新评论 ${comment.id} 状态: ${prevStatus} -> ${comment.status}`);
-              CommentHighlighter.updateMarkerStyle(container, comment.id, comment.status);
+              console.log(
+                `[DocumentView] 更新评论 ${comment.id} 状态: ${prevStatus} -> ${comment.status}`
+              );
+              CommentHighlighter.updateMarkerStyle(
+                container,
+                comment.id,
+                comment.status
+              );
             }
           });
 
@@ -223,7 +240,7 @@ const DocumentView: React.FC = () => {
         }
       } else {
         // 有结构性变化（新增/删除评论），需要重新注入
-        console.log('[DocumentView] 检测到评论结构变化，准备重新注入');
+        console.log("[DocumentView] 检测到评论结构变化，准备重新注入");
         prevCommentsRef.current = currentCommentsMap;
       }
 
@@ -231,7 +248,7 @@ const DocumentView: React.FC = () => {
       const injectMarkers = () => {
         if (isInjecting) return; // 如果正在注入，跳过
 
-        console.log('[DocumentView] 注入评论标记，评论数量:', comments.length);
+        console.log("[DocumentView] 注入评论标记，评论数量:", comments.length);
         isInjecting = true;
 
         // 暂时断开观察器，避免触发自己
@@ -264,26 +281,33 @@ const DocumentView: React.FC = () => {
         // 同时排除评论标记元素的变化
         const hasStructuralChanges = mutations.some(
           (mutation) =>
-            mutation.type === 'childList' &&
-            (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) &&
+            mutation.type === "childList" &&
+            (mutation.addedNodes.length > 0 ||
+              mutation.removedNodes.length > 0) &&
             // 排除评论标记相关的变化
-            !Array.from(mutation.addedNodes).some((node) =>
-              node instanceof HTMLElement && node.classList.contains('comment-highlight')
+            !Array.from(mutation.addedNodes).some(
+              (node) =>
+                node instanceof HTMLElement &&
+                node.classList.contains("comment-highlight")
             ) &&
-            !Array.from(mutation.removedNodes).some((node) =>
-              node instanceof HTMLElement && node.classList.contains('comment-highlight')
+            !Array.from(mutation.removedNodes).some(
+              (node) =>
+                node instanceof HTMLElement &&
+                node.classList.contains("comment-highlight")
             )
         );
 
         if (hasStructuralChanges) {
-          console.log('[DocumentView] 检测到 DOM 结构变化，准备重新注入评论标记');
+          console.log(
+            "[DocumentView] 检测到 DOM 结构变化，准备重新注入评论标记"
+          );
 
           // 使用防抖，避免频繁触发
           if (debounceTimer) {
             clearTimeout(debounceTimer);
           }
           debounceTimer = setTimeout(() => {
-            console.log('[DocumentView] 执行重新注入');
+            console.log("[DocumentView] 执行重新注入");
             injectMarkers();
           }, 200);
         }
@@ -299,7 +323,12 @@ const DocumentView: React.FC = () => {
         }
         observer.disconnect();
       };
-    } else if (!isEditing && commentsEnabled && viewerContainerRef.current && comments.length === 0) {
+    } else if (
+      !isEditing &&
+      commentsEnabled &&
+      viewerContainerRef.current &&
+      comments.length === 0
+    ) {
       // 没有评论时清除所有标记
       CommentHighlighter.clear(viewerContainerRef.current);
     }
@@ -311,23 +340,29 @@ const DocumentView: React.FC = () => {
 
     const handleCommentMarkerClick = (e: Event) => {
       const customEvent = e as CustomEvent<{ commentId: string }>;
-      console.log('[DocumentView] 评论标记被点击:', customEvent.detail.commentId);
+      console.log(
+        "[DocumentView] 评论标记被点击:",
+        customEvent.detail.commentId
+      );
       setIsCommentPanelOpen(true);
       // TODO: 滚动到对应的评论
     };
 
     const container = viewerContainerRef.current;
-    container.addEventListener('commentMarkerClick', handleCommentMarkerClick);
+    container.addEventListener("commentMarkerClick", handleCommentMarkerClick);
 
     return () => {
-      container.removeEventListener('commentMarkerClick', handleCommentMarkerClick);
+      container.removeEventListener(
+        "commentMarkerClick",
+        handleCommentMarkerClick
+      );
     };
   }, []);
 
   // 初始化编辑内容
   useEffect(() => {
     if (document && !isEditing) {
-      setEditContent(document.content);
+      setEditContent(document.content ?? '');
     }
   }, [document, isEditing]);
 
@@ -339,7 +374,7 @@ const DocumentView: React.FC = () => {
         // 文件被外部修改,显示冲突提示
         console.log("[FILEWATCH] 检测到文件变化，触发冲突提示");
         setConflictInfo({
-          expectedMtime: document?.metadata.lastModified || 0,
+          expectedMtime: document?.metadata?.lastModified ?? 0,
           actualMtime: event.lastModified,
         });
         setShowConflictModal(true);
@@ -372,30 +407,33 @@ const DocumentView: React.FC = () => {
   }, [document]);
 
   // 处理文档内链接点击
-  const handleLinkClick = useCallback((href: string) => {
-    if (!document) return;
+  const handleLinkClick = useCallback(
+    (href: string) => {
+      if (!document) return;
 
-    // 相对路径处理
-    if (href.startsWith("./") || href.startsWith("../")) {
-      const currentDir = document.relativePath
-        .split("/")
-        .slice(0, -1)
-        .join("/");
-      const resolvedPath = resolvePath(currentDir, href);
-      navigate(`/document/${encodeURIComponent(resolvedPath)}`);
-    } else if (href.startsWith("/")) {
-      // 绝对路径
-      navigate(`/document/${encodeURIComponent(href.substring(1))}`);
-    } else {
-      // 同级文件
-      const currentDir = document.relativePath
-        .split("/")
-        .slice(0, -1)
-        .join("/");
-      const resolvedPath = currentDir ? `${currentDir}/${href}` : href;
-      navigate(`/document/${encodeURIComponent(resolvedPath)}`);
-    }
-  }, [document, navigate]);
+      // 相对路径处理
+      if (href.startsWith("./") || href.startsWith("../")) {
+        const currentDir = document.relativePath
+          .split("/")
+          .slice(0, -1)
+          .join("/");
+        const resolvedPath = resolvePath(currentDir, href);
+        navigate(`/document/${encodeURIComponent(resolvedPath)}`);
+      } else if (href.startsWith("/")) {
+        // 绝对路径
+        navigate(`/document/${encodeURIComponent(href.substring(1))}`);
+      } else {
+        // 同级文件
+        const currentDir = document.relativePath
+          .split("/")
+          .slice(0, -1)
+          .join("/");
+        const resolvedPath = currentDir ? `${currentDir}/${href}` : href;
+        navigate(`/document/${encodeURIComponent(resolvedPath)}`);
+      }
+    },
+    [document, navigate]
+  );
 
   // 处理返回首页
   const handleHomeClick = () => {
@@ -419,7 +457,7 @@ const DocumentView: React.FC = () => {
     } else {
       setIsEditing(!isEditing);
       if (!isEditing && document) {
-        setEditContent(document.content);
+        setEditContent(document.content ?? '');
       }
       setHasUnsavedChanges(false);
     }
@@ -433,7 +471,7 @@ const DocumentView: React.FC = () => {
 
     try {
       // lastModified 已经是时间戳（毫秒）
-      const expectedMtime = document.metadata.lastModified;
+      const expectedMtime = document.metadata?.lastModified;
 
       const response = await CLIService.writeDocument(
         decodedPath,
@@ -482,9 +520,10 @@ const DocumentView: React.FC = () => {
       } else if (response.error?.code === "CONFLICT") {
         console.log("[FRONTEND] ❌ 进入冲突分支");
         // 冲突
+        const details = response.error.details as { actualMtime?: number } | undefined;
         setConflictInfo({
-          expectedMtime: expectedMtime,
-          actualMtime: response.error.details?.actualMtime || Date.now(),
+          expectedMtime: expectedMtime ?? 0,
+          actualMtime: details?.actualMtime ?? Date.now(),
         });
         setShowConflictModal(true);
         toast.warning("文件已被外部修改，请选择如何处理");
@@ -553,7 +592,7 @@ const DocumentView: React.FC = () => {
     setIsEditing(false);
     setHasUnsavedChanges(false);
     if (document) {
-      setEditContent(document.content);
+      setEditContent(document.content ?? '');
     }
   }, [document]);
 
@@ -566,13 +605,13 @@ const DocumentView: React.FC = () => {
   const handleCommentSubmit = useCallback(
     async (content: string, author?: string) => {
       if (!selectedAnchor) {
-        console.error('[DocumentView] 提交评论失败: selectedAnchor 为空');
+        console.error("[DocumentView] 提交评论失败: selectedAnchor 为空");
         return;
       }
 
-      console.log('[DocumentView] 提交评论, anchor:', selectedAnchor);
-      console.log('[DocumentView] 评论内容:', content);
-      console.log('[DocumentView] 作者:', author);
+      console.log("[DocumentView] 提交评论, anchor:", selectedAnchor);
+      console.log("[DocumentView] 评论内容:", content);
+      console.log("[DocumentView] 作者:", author);
 
       const comment = await addComment({
         content,
@@ -580,19 +619,19 @@ const DocumentView: React.FC = () => {
         anchor: selectedAnchor,
       });
 
-      console.log('[DocumentView] 评论提交结果:', comment);
+      console.log("[DocumentView] 评论提交结果:", comment);
 
       if (comment) {
-        console.log('[DocumentView] ✅ 评论提交成功');
+        console.log("[DocumentView] ✅ 评论提交成功");
         setShowCommentForm(false);
         setSelectedAnchor(null);
         clearSelection();
         // 自动打开评论面板显示新添加的评论
         setIsCommentPanelOpen(true);
-        toast.success('评论添加成功');
+        toast.success("评论添加成功");
       } else {
-        console.error('[DocumentView] ❌ 评论提交失败');
-        toast.error('评论添加失败，请重试');
+        console.error("[DocumentView] ❌ 评论提交失败");
+        toast.error("评论添加失败，请重试");
       }
     },
     [selectedAnchor, addComment, clearSelection, toast]
@@ -611,14 +650,16 @@ const DocumentView: React.FC = () => {
   }, []);
 
   // 格式化文件大小
-  const formatFileSize = (bytes: number): string => {
+  const formatFileSize = (bytes: number | undefined): string => {
+    if (bytes === undefined) return '未知';
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   };
 
   // 格式化日期
-  const formatDate = (timestamp: number): string => {
+  const formatDate = (timestamp: number | undefined): string => {
+    if (timestamp === undefined) return '未知';
     return new Date(timestamp).toLocaleString("zh-CN", {
       year: "numeric",
       month: "2-digit",
@@ -632,129 +673,80 @@ const DocumentView: React.FC = () => {
   return (
     <Layout showSidebar={true} enableSearch={true}>
       <>
-      {/* 加载状态 */}
-      {deferredLoading && (
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <div className="text-gh-fg-muted">加载文档中...</div>
-          </div>
-        </div>
-      )}
-
-      {/* 错误状态 */}
-      {error && !deferredLoading && (
-        <div className="flex items-center justify-center h-full p-8">
-          <div className="text-center max-w-md">
-            <svg
-              className="w-16 h-16 text-gh-danger-fg mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <h2 className="text-xl font-semibold text-gh-danger-fg mb-2">
-              加载失败
-            </h2>
-            <p className="text-gh-fg-muted mb-4">{error}</p>
-            <button
-              onClick={refreshDocument}
-              className="px-4 py-2 bg-gh-btn-bg text-gh-btn-text rounded-md hover:bg-gh-btn-hover-bg transition-colors"
-            >
-              重试
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 文档未找到 */}
-      {!document && !loading && !error && !deferredLoading && (
-        <div className="flex items-center justify-center h-full p-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gh-fg-default mb-2">
-              文档未找到
-            </h2>
-            <p className="text-gh-fg-muted">请从侧边栏选择要查看的文档</p>
-          </div>
-        </div>
-      )}
-
-      {/* 正常渲染文档 */}
-      {document && !deferredLoading && !error && (
-      <div className="flex flex-col h-full bg-gh-canvas-default overflow-hidden">
-      {/* 文档头部 - 固定区域 */}
-      <div className="flex-shrink-0 border-b border-gh-border-default bg-gh-canvas-subtle">
-        <div className="px-8 py-4">
-          {/* 面包屑导航 */}
-          <nav className="flex items-center gap-2 text-sm mb-3">
-            {/* 首页按钮 */}
-            <button
-              onClick={handleHomeClick}
-              className="text-gh-accent-fg hover:underline"
-              title="返回首页"
-            >
-              首页
-            </button>
-
-            {/* 路径分隔符和路径部分 */}
-            {breadcrumbs.map((crumb, index) => (
-              <React.Fragment key={index}>
-                <svg
-                  className="w-4 h-4 text-gh-fg-muted"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-                {crumb.isLast ? (
-                  <span className="text-gh-fg-default font-semibold">
-                    {crumb.name}
-                  </span>
-                ) : (
-                  <span className="text-gh-fg-muted">{crumb.name}</span>
-                )}
-              </React.Fragment>
-            ))}
-          </nav>
-
-          {/* 文档标题和元信息 */}
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold text-gh-fg-default truncate">
-                {document.displayName}
-              </h1>
-              <div className="flex items-center gap-4 mt-2 text-sm text-gh-fg-muted">
-                <span>{document.metadata.lineCount} 行</span>
-                <span>{formatFileSize(document.metadata.size)}</span>
-                <span>
-                  最后修改: {formatDate(document.metadata.lastModified)}
-                </span>
-              </div>
+        {/* 加载状态 */}
+        {deferredLoading && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="text-gh-fg-muted">加载文档中...</div>
             </div>
+          </div>
+        )}
 
-            {/* 操作按钮 */}
-            <div className="flex items-center gap-2 ml-4">
-              {!isEditing ? (
-                <>
-                  {commentsEnabled && (
-                    <button
-                      onClick={handleToggleCommentPanel}
-                      className="px-3 py-2 text-sm bg-gh-btn-bg text-gh-btn-text rounded-md hover:bg-gh-btn-hover-bg transition-colors flex items-center gap-2"
-                      title="查看评论"
-                    >
+        {/* 错误状态 */}
+        {error && !deferredLoading && (
+          <div className="flex items-center justify-center h-full p-8">
+            <div className="text-center max-w-md">
+              <svg
+                className="w-16 h-16 text-gh-danger-fg mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <h2 className="text-xl font-semibold text-gh-danger-fg mb-2">
+                加载失败
+              </h2>
+              <p className="text-gh-fg-muted mb-4">{error}</p>
+              <button
+                onClick={refreshDocument}
+                className="px-4 py-2 bg-gh-btn-bg text-gh-btn-text rounded-md hover:bg-gh-btn-hover-bg transition-colors"
+              >
+                重试
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 文档未找到 */}
+        {!document && !loading && !error && !deferredLoading && (
+          <div className="flex items-center justify-center h-full p-8">
+            <div className="text-center">
+              <h2 className="text-2xl font-semibold text-gh-fg-default mb-2">
+                文档未找到
+              </h2>
+              <p className="text-gh-fg-muted">请从侧边栏选择要查看的文档</p>
+            </div>
+          </div>
+        )}
+
+        {/* 正常渲染文档 */}
+        {document && !deferredLoading && !error && (
+          <div className="flex flex-col h-full bg-gh-canvas-default overflow-hidden">
+            {/* 文档头部 - 固定区域 */}
+            <div className="flex-shrink-0 border-b border-gh-border-default bg-gh-canvas-subtle">
+              <div className="px-8 py-4">
+                {/* 面包屑导航 */}
+                <nav className="flex items-center gap-2 text-sm mb-3">
+                  {/* 首页按钮 */}
+                  <button
+                    onClick={handleHomeClick}
+                    className="text-gh-accent-fg hover:underline"
+                    title="返回首页"
+                  >
+                    首页
+                  </button>
+
+                  {/* 路径分隔符和路径部分 */}
+                  {breadcrumbs.map((crumb, index) => (
+                    <React.Fragment key={index}>
                       <svg
-                        className="w-4 h-4"
+                        className="w-4 h-4 text-gh-fg-muted"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -763,63 +755,112 @@ const DocumentView: React.FC = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                          d="M9 5l7 7-7 7"
                         />
                       </svg>
-                      评论
-                      {comments.length > 0 && (
-                        <span className="ml-1 px-1.5 py-0.5 text-xs bg-gh-accent-emphasis text-white rounded-full">
-                          {comments.length}
+                      {crumb.isLast ? (
+                        <span className="text-gh-fg-default font-semibold">
+                          {crumb.name}
                         </span>
+                      ) : (
+                        <span className="text-gh-fg-muted">{crumb.name}</span>
                       )}
-                    </button>
-                  )}
-                  <button
-                    onClick={handleToggleEdit}
-                    className="px-3 py-2 text-sm bg-gh-accent-emphasis text-white rounded-md hover:bg-gh-accent-emphasis/90 transition-colors flex items-center gap-2"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                      />
-                    </svg>
-                    编辑
-                  </button>
-                  <button
-                    onClick={refreshDocument}
-                    className="px-3 py-2 text-sm bg-gh-btn-bg text-gh-btn-text rounded-md hover:bg-gh-btn-hover-bg transition-colors flex items-center gap-2"
-                    title="刷新文档"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    刷新
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={handleSave}
-                    disabled={!hasUnsavedChanges || isSaving}
-                    className={`
+                    </React.Fragment>
+                  ))}
+                </nav>
+
+                {/* 文档标题和元信息 */}
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-2xl font-bold text-gh-fg-default truncate">
+                      {document.displayName}
+                    </h1>
+                    <div className="flex items-center gap-4 mt-2 text-sm text-gh-fg-muted">
+                      <span>{document.metadata?.lineCount} 行</span>
+                      <span>{formatFileSize(document.metadata?.size)}</span>
+                      <span>
+                        最后修改: {formatDate(document.metadata?.lastModified)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 操作按钮 */}
+                  <div className="flex items-center gap-2 ml-4">
+                    {!isEditing ? (
+                      <>
+                        {commentsEnabled && (
+                          <button
+                            onClick={handleToggleCommentPanel}
+                            className="px-3 py-2 text-sm bg-gh-btn-bg text-gh-btn-text rounded-md hover:bg-gh-btn-hover-bg transition-colors flex items-center gap-2"
+                            title="查看评论"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                              />
+                            </svg>
+                            评论
+                            {comments.length > 0 && (
+                              <span className="ml-1 px-1.5 py-0.5 text-xs bg-gh-accent-emphasis text-white rounded-full">
+                                {comments.length}
+                              </span>
+                            )}
+                          </button>
+                        )}
+                        <button
+                          onClick={handleToggleEdit}
+                          className="px-3 py-2 text-sm bg-gh-accent-emphasis text-white rounded-md hover:bg-gh-accent-emphasis/90 transition-colors flex items-center gap-2"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                          编辑
+                        </button>
+                        <button
+                          onClick={refreshDocument}
+                          className="px-3 py-2 text-sm bg-gh-btn-bg text-gh-btn-text rounded-md hover:bg-gh-btn-hover-bg transition-colors flex items-center gap-2"
+                          title="刷新文档"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                          刷新
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={handleSave}
+                          disabled={!hasUnsavedChanges || isSaving}
+                          className={`
                       px-3 py-2 text-sm rounded-md transition-colors flex items-center gap-2
                       ${
                         hasUnsavedChanges && !isSaving
@@ -827,252 +868,256 @@ const DocumentView: React.FC = () => {
                           : "bg-gh-btn-bg text-gh-fg-muted cursor-not-allowed"
                       }
                     `}
-                  >
-                    {isSaving ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        保存中...
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                          />
-                        </svg>
-                        保存 {hasUnsavedChanges && "*"}
+                          {isSaving ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                              保存中...
+                            </>
+                          ) : (
+                            <>
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                                />
+                              </svg>
+                              保存 {hasUnsavedChanges && "*"}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={handleToggleEdit}
+                          className="px-3 py-2 text-sm bg-gh-btn-bg text-gh-btn-text rounded-md hover:bg-gh-btn-hover-bg transition-colors"
+                        >
+                          取消
+                        </button>
                       </>
                     )}
-                  </button>
-                  <button
-                    onClick={handleToggleEdit}
-                    className="px-3 py-2 text-sm bg-gh-btn-bg text-gh-btn-text rounded-md hover:bg-gh-btn-hover-bg transition-colors"
-                  >
-                    取消
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 文档内容 - 可滚动区域 */}
-      {!isEditing ? (
-        <div
-          className="flex-1 overflow-y-auto relative"
-          ref={viewerContainerRef}
-        >
-          <Viewer
-            content={document.content}
-            onLinkClick={handleLinkClick}
-            targetLine={targetLine}
-            targetText={targetText}
-          />
-
-          {/* 自定义文本高亮层（用于显示选中的文本） */}
-          {selection && commentsEnabled && selection.rects && (
-            <>
-              {selection.rects.map((rect, index) => (
-                <div
-                  key={index}
-                  className="fixed pointer-events-none z-20 transition-opacity duration-150"
-                  style={{
-                    left: `${rect.left}px`,
-                    top: `${rect.top - 3}px`, // 向上偏移 3px
-                    width: `${rect.width}px`,
-                    height: `${rect.height + 6}px`, // 增加 6px 高度 (上下各 3px)
-                    backgroundColor: "rgba(250, 219, 20, 0.4)", // #fadb14 40% 透明度
-                  }}
-                />
-              ))}
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="flex-1 overflow-hidden grid grid-cols-2 gap-0">
-          <Editor
-            content={editContent}
-            onChange={handleContentChange}
-            onSave={handleSave}
-          />
-          <Preview content={editContent} onLinkClick={handleLinkClick} />
-        </div>
-      )}
-
-      {/* 评论面板 */}
-      {commentsEnabled && (
-        <CommentPanel
-          isOpen={isCommentPanelOpen}
-          onClose={() => setIsCommentPanelOpen(false)}
-          comments={comments}
-          onAddComment={async (content, parentId) => {
-            // 回复评论时，使用父评论的 anchor
-            if (parentId) {
-              const parentComment = comments.find((c) => c.id === parentId);
-              if (parentComment && document) {
-                await addComment({
-                  content,
-                  author: "Anonymous",
-                  anchor: parentComment.anchor,
-                  parentId,
-                });
-              }
-            } else {
-              console.warn("添加顶级评论请使用文本选择功能");
-            }
-          }}
-          onEditComment={async (commentId, content) => {
-            await updateComment(commentId, { content });
-          }}
-          onDeleteComment={async (commentId) => {
-            await deleteComment(commentId);
-          }}
-          onResolveComment={async (commentId) => {
-            await resolveComment(commentId);
-          }}
-          onReopenComment={async (commentId) => {
-            await reopenComment(commentId);
-          }}
-          documentName={document?.displayName}
-        />
-      )}
-
-      {/* 评论表单 Modal */}
-      {showCommentForm && selectedAnchor && (
-        <Modal
-          isOpen={showCommentForm}
-          onClose={handleCommentCancel}
-          title="添加评论"
-          size="md"
-        >
-          <CommentForm
-            onSubmit={handleCommentSubmit}
-            onCancel={handleCommentCancel}
-            selectedText={selectedAnchor.textFragment}
-          />
-        </Modal>
-      )}
-
-      {/* 冲突提示 Modal */}
-      <Modal
-        isOpen={showConflictModal}
-        onClose={() => setShowConflictModal(false)}
-        title="文件冲突"
-        size="md"
-        buttons={[
-          {
-            label: "刷新并重载",
-            onClick: handleReload,
-            variant: "secondary",
-          },
-          {
-            label: "强制保存",
-            onClick: handleForceSave,
-            variant: "danger",
-            autoFocus: true,
-          },
-        ]}
-      >
-        <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <svg
-              className="w-6 h-6 text-gh-attention-fg flex-shrink-0 mt-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <div className="flex-1">
-              <p className="font-semibold mb-2">文件已被外部修改</p>
-              <p className="text-sm text-gh-fg-muted">
-                该文件在编辑期间被外部程序修改。你可以选择:
-              </p>
-              <ul className="list-disc list-inside text-sm text-gh-fg-muted mt-2 space-y-1">
-                <li>
-                  <strong>刷新并重载</strong>: 放弃当前更改,加载最新版本
-                </li>
-                <li>
-                  <strong>强制保存</strong>: 覆盖外部更改,保存当前内容
-                </li>
-              </ul>
-              {conflictInfo && (
-                <div className="mt-3 p-3 bg-gh-canvas-subtle rounded text-xs font-mono">
-                  <div>
-                    预期修改时间:{" "}
-                    {new Date(conflictInfo.expectedMtime).toLocaleString(
-                      "zh-CN"
-                    )}
-                  </div>
-                  <div>
-                    实际修改时间:{" "}
-                    {new Date(conflictInfo.actualMtime).toLocaleString("zh-CN")}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
-      </Modal>
 
-      {/* 未保存提示 Modal */}
-      <Modal
-        isOpen={showUnsavedModal}
-        onClose={handleContinueEditing}
-        title="未保存的更改"
-        size="sm"
-        buttons={[
-          {
-            label: "继续编辑",
-            onClick: handleContinueEditing,
-            variant: "secondary",
-          },
-          {
-            label: "放弃更改",
-            onClick: handleDiscardChanges,
-            variant: "danger",
-            autoFocus: true,
-          },
-        ]}
-      >
-        <div className="flex items-start gap-3">
-          <svg
-            className="w-6 h-6 text-gh-attention-fg flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
-          <div>
-            <p className="font-semibold mb-2">你有未保存的更改</p>
-            <p className="text-sm text-gh-fg-muted">
-              如果离开编辑模式,你的更改将会丢失。确定要继续吗?
-            </p>
+            {/* 文档内容 - 可滚动区域 */}
+            {!isEditing ? (
+              <div
+                className="flex-1 overflow-y-auto relative"
+                ref={viewerContainerRef}
+              >
+                <Viewer
+                  content={document.content ?? ''}
+                  onLinkClick={handleLinkClick}
+                  targetLine={targetLine}
+                  targetText={targetText}
+                />
+
+                {/* 自定义文本高亮层（用于显示选中的文本） */}
+                {selection && commentsEnabled && selection.rects && (
+                  <>
+                    {selection.rects.map((rect, index) => (
+                      <div
+                        key={index}
+                        className="fixed pointer-events-none z-20 transition-opacity duration-150"
+                        style={{
+                          left: `${rect.left}px`,
+                          top: `${rect.top - 3}px`, // 向上偏移 3px
+                          width: `${rect.width}px`,
+                          height: `${rect.height + 6}px`, // 增加 6px 高度 (上下各 3px)
+                          backgroundColor: "rgba(250, 219, 20, 0.4)", // #fadb14 40% 透明度
+                        }}
+                      />
+                    ))}
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="flex-1 overflow-hidden grid grid-cols-2 gap-0">
+                <Editor
+                  content={editContent}
+                  onChange={handleContentChange}
+                  onSave={handleSave}
+                />
+                <Preview content={editContent} onLinkClick={handleLinkClick} />
+              </div>
+            )}
+
+            {/* 评论面板 */}
+            {commentsEnabled && (
+              <CommentPanel
+                isOpen={isCommentPanelOpen}
+                onClose={() => setIsCommentPanelOpen(false)}
+                comments={comments}
+                onAddComment={async (content, parentId) => {
+                  // 回复评论时，使用父评论的 anchor
+                  if (parentId) {
+                    const parentComment = comments.find(
+                      (c) => c.id === parentId
+                    );
+                    if (parentComment && document) {
+                      await addComment({
+                        content,
+                        author: "Anonymous",
+                        anchor: parentComment.anchor,
+                        parentId,
+                      });
+                    }
+                  } else {
+                    console.warn("添加顶级评论请使用文本选择功能");
+                  }
+                }}
+                onEditComment={async (commentId, content) => {
+                  await updateComment(commentId, { content });
+                }}
+                onDeleteComment={async (commentId) => {
+                  await deleteComment(commentId);
+                }}
+                onResolveComment={async (commentId) => {
+                  await resolveComment(commentId);
+                }}
+                onReopenComment={async (commentId) => {
+                  await reopenComment(commentId);
+                }}
+                documentName={document?.displayName}
+              />
+            )}
+
+            {/* 评论表单 Modal */}
+            {showCommentForm && selectedAnchor && (
+              <Modal
+                isOpen={showCommentForm}
+                onClose={handleCommentCancel}
+                title="添加评论"
+                size="md"
+              >
+                <CommentForm
+                  onSubmit={handleCommentSubmit}
+                  onCancel={handleCommentCancel}
+                  selectedText={selectedAnchor.textFragment}
+                />
+              </Modal>
+            )}
+
+            {/* 冲突提示 Modal */}
+            <Modal
+              isOpen={showConflictModal}
+              onClose={() => setShowConflictModal(false)}
+              title="文件冲突"
+              size="md"
+              buttons={[
+                {
+                  label: "刷新并重载",
+                  onClick: handleReload,
+                  variant: "secondary",
+                },
+                {
+                  label: "强制保存",
+                  onClick: handleForceSave,
+                  variant: "danger",
+                  autoFocus: true,
+                },
+              ]}
+            >
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <svg
+                    className="w-6 h-6 text-gh-attention-fg flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-2">文件已被外部修改</p>
+                    <p className="text-sm text-gh-fg-muted">
+                      该文件在编辑期间被外部程序修改。你可以选择:
+                    </p>
+                    <ul className="list-disc list-inside text-sm text-gh-fg-muted mt-2 space-y-1">
+                      <li>
+                        <strong>刷新并重载</strong>: 放弃当前更改,加载最新版本
+                      </li>
+                      <li>
+                        <strong>强制保存</strong>: 覆盖外部更改,保存当前内容
+                      </li>
+                    </ul>
+                    {conflictInfo && (
+                      <div className="mt-3 p-3 bg-gh-canvas-subtle rounded text-xs font-mono">
+                        <div>
+                          预期修改时间:{" "}
+                          {new Date(conflictInfo.expectedMtime).toLocaleString(
+                            "zh-CN"
+                          )}
+                        </div>
+                        <div>
+                          实际修改时间:{" "}
+                          {new Date(conflictInfo.actualMtime).toLocaleString(
+                            "zh-CN"
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Modal>
+
+            {/* 未保存提示 Modal */}
+            <Modal
+              isOpen={showUnsavedModal}
+              onClose={handleContinueEditing}
+              title="未保存的更改"
+              size="sm"
+              buttons={[
+                {
+                  label: "继续编辑",
+                  onClick: handleContinueEditing,
+                  variant: "secondary",
+                },
+                {
+                  label: "放弃更改",
+                  onClick: handleDiscardChanges,
+                  variant: "danger",
+                  autoFocus: true,
+                },
+              ]}
+            >
+              <div className="flex items-start gap-3">
+                <svg
+                  className="w-6 h-6 text-gh-attention-fg flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <div>
+                  <p className="font-semibold mb-2">你有未保存的更改</p>
+                  <p className="text-sm text-gh-fg-muted">
+                    如果离开编辑模式,你的更改将会丢失。确定要继续吗?
+                  </p>
+                </div>
+              </div>
+            </Modal>
           </div>
-        </div>
-      </Modal>
-      </div>
-      )}
+        )}
       </>
     </Layout>
   );

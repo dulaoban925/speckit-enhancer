@@ -1,12 +1,11 @@
 {
   "name": "@speckit-enhancer/dashboard",
-  "version": "1.0.0",
+  "version": "1.0.7",
   "description": "Speckit Enhancer - Dashboard SPA for visualizing and managing specifications",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "build:prod": "vite build",
     "preview": "vite preview",
     "test": "vitest",
     "test:watch": "vitest --watch",

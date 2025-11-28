@@ -4,7 +4,7 @@
  * 按阶段(Phase)展示已完成/进行中/待处理/阻塞的任务数量
  */
 
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import type { FeatureDashboardMetrics } from '../types/metrics'
 
 interface ProgressTimelineProps {
@@ -122,7 +122,7 @@ interface PhaseData {
 /**
  * 从 metrics 提取阶段数据
  */
-function extractPhaseData(metrics: FeatureDashboardMetrics): PhaseData[] {
+function extractPhaseData(_metrics: FeatureDashboardMetrics): PhaseData[] {
   // 模拟阶段数据 (实际应该从 tasks.md 解析获取)
   // TODO: 集成 tasksParser 的阶段分析功能
   const phases = [

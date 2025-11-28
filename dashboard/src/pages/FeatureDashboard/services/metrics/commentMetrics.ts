@@ -65,13 +65,25 @@ export function calculateCollaborationMetrics(comments: Comment[]): Collaboratio
  */
 function calculateTopContributors(comments: Comment[], limit: number): Contributor[] {
   const authorCounts = new Map<string, number>()
+  const authorLastActive = new Map<string, Date>()
 
   comments.forEach((c) => {
     authorCounts.set(c.author, (authorCounts.get(c.author) || 0) + 1)
+
+    // 更新最后活跃时间
+    const currentLastActive = authorLastActive.get(c.author)
+    const commentDate = c.updatedAt || c.createdAt
+    if (!currentLastActive || commentDate > currentLastActive) {
+      authorLastActive.set(c.author, commentDate)
+    }
   })
 
   return Array.from(authorCounts.entries())
-    .map(([author, commentCount]) => ({ author, commentCount }))
+    .map(([author, commentCount]) => ({
+      author,
+      commentCount,
+      lastActive: authorLastActive.get(author) || new Date()
+    }))
     .sort((a, b) => b.commentCount - a.commentCount)
     .slice(0, limit)
 }

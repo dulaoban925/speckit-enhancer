@@ -6,6 +6,7 @@
 import { useEffect } from 'react'
 import { useDashboardStore } from '../store'
 import type { FeatureDashboardMetrics } from '../types/metrics'
+import type { CommentsResponse, Comment } from '../services/parsers/commentsParser'
 
 /**
  * Dashboard 数据加载 Hook
@@ -57,8 +58,8 @@ export function useDashboardData(featureId: string) {
       }
 
       // 3. 解析文件
-      const tasksData = parseTasksFile(tasksResponse.data.content)
-      const specData = parseSpecFile(specResponse.data.content)
+      const tasksData = parseTasksFile(tasksResponse.data?.content ?? '')
+      const specData = parseSpecFile(specResponse.data?.content ?? '')
 
       // 4. 获取评论数据
       // 从特性的所有核心文档中获取评论
@@ -76,26 +77,26 @@ export function useDashboardData(featureId: string) {
           try {
             // 从featureId中提取数字部分作为feature-id参数
             const featureNumber = featureId.match(/^(\d+)/)?.[1] || '000'
-            const response = await CLIService.executeCommentCommand({
+            const response = await CLIService.executeCommentCommand<CommentsResponse>({
               action: 'list',
               documentPath: docPath,
               featureId: featureNumber,
             })
             return {
               documentPath: docPath,
-              data: response.success ? response.data : { comments: [], total: 0, totalWithReplies: 0 },
+              data: response.success && response.data ? response.data : { comments: [], total: 0, totalWithReplies: 0 },
             }
           } catch {
             return {
               documentPath: docPath,
-              data: { comments: [], total: 0, totalWithReplies: 0 },
+              data: { comments: [], total: 0, totalWithReplies: 0 } as CommentsResponse,
             }
           }
         })
       )
 
       // 解析评论数据
-      const collaborationData = parseCommentsData(commentsResponses)
+      const collaborationData = parseCommentsData(commentsResponses as Array<{ documentPath: string; data: CommentsResponse }>)
 
       // 5. 扫描文档并计算覆盖率
       const coreDocuments = [
@@ -199,20 +200,20 @@ export function useDashboardData(featureId: string) {
 
       // 8. 计算风险指标
       // 8.1 提取阻塞问题（从评论中）
-      const blockingIssuesFromComments = commentsResponses.flatMap(({ documentPath, data }) => {
+      const blockingIssuesFromComments = (commentsResponses as Array<{ documentPath: string; data: CommentsResponse }>).flatMap(({ documentPath, data }) => {
         const blockingKeywords = ['阻塞', 'blocked', 'urgent', '紧急', 'critical']
         return data.comments
-          .filter(comment =>
+          .filter((comment: Comment) =>
             comment.status === 'open' &&
             blockingKeywords.some(keyword => comment.content.toLowerCase().includes(keyword.toLowerCase()))
           )
-          .map(comment => {
+          .map((comment: Comment) => {
             const createdAt = new Date(comment.createdAt)
             const ageInDays = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
 
             return {
               id: comment.id,
-              type: 'blocking-comment',
+              type: 'blocking-issue' as const,
               title: comment.content.substring(0, 50) + (comment.content.length > 50 ? '...' : ''),
               age: ageInDays,
               impact: 1, // 简化：每个阻塞问题影响 1 个任务
@@ -227,7 +228,7 @@ export function useDashboardData(featureId: string) {
         .filter(doc => doc.status === 'stale')
         .map(doc => ({
           id: doc.name,
-          type: 'stale-document',
+          type: 'stale-document' as const,
           title: doc.name,
           age: Math.floor(doc.ageInDays),
           impact: 1,
@@ -264,7 +265,7 @@ export function useDashboardData(featureId: string) {
             progressPercentage === 0
               ? 'not-started'
               : progressPercentage === 100
-              ? 'completed'
+              ? 'active' // 100% 完成仍然视为 active 状态
               : 'active',
         },
         documents: {
@@ -274,7 +275,7 @@ export function useDashboardData(featureId: string) {
             path: `specs/${featureId}/${doc.name}`,
             size: doc.size,
             lastModified: doc.lastModified,
-            status: doc.status,
+            status: doc.status as 'ok' | 'missing' | 'stale',
             exists: doc.exists,
           })),
           averageUpdateAge: averageAge,

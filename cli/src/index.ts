@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
 import { serveCommand } from './commands/serve.js'
 import { listCommand } from './commands/list.js'
 import { readCommand } from './commands/read.js'
@@ -12,12 +15,21 @@ import {
   deleteCommentCommand,
 } from './commands/comment.js'
 
+// 获取当前文件的目录路径（ES 模块）
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+// 读取 package.json 获取版本号
+const packageJsonPath = join(__dirname, '../package.json')
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
+const version = packageJson.version
+
 const program = new Command()
 
 program
   .name('speckit-enhancer')
   .description('Speckit Enhancer - CLI 工具用于启动 Dashboard 和管理项目文档')
-  .version('1.0.2')
+  .version(version)
   .alias('ske')
 
 // ==================== Dashboard 命令组 ====================

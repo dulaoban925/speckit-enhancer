@@ -46,23 +46,26 @@ export function useFileWatch(
       // 调用 CLI read 命令获取文件元数据
       const response = await CLIService.readDocument(filePath)
 
-      if (response.success && response.data) {
+      if (response.success && response.data && response.data.metadata) {
         const currentModified = response.data.metadata.lastModified
 
-        // 初始化或检测变化
-        if (lastModifiedRef.current === null) {
-          // 首次检查,仅记录时间
-          lastModifiedRef.current = currentModified
-        } else if (currentModified !== lastModifiedRef.current) {
-          // 文件已变化
-          lastModifiedRef.current = currentModified
+        // 只有在 lastModified 存在时才进行监听
+        if (currentModified !== undefined) {
+          // 初始化或检测变化
+          if (lastModifiedRef.current === null) {
+            // 首次检查,仅记录时间
+            lastModifiedRef.current = currentModified
+          } else if (currentModified !== lastModifiedRef.current) {
+            // 文件已变化
+            lastModifiedRef.current = currentModified
 
-          if (onChange) {
-            onChange({
-              path: response.data.path,
-              lastModified: currentModified,
-              size: response.data.metadata.size,
-            })
+            if (onChange) {
+              onChange({
+                path: response.data.path,
+                lastModified: currentModified,
+                size: response.data.metadata.size ?? 0,
+              })
+            }
           }
         }
       }

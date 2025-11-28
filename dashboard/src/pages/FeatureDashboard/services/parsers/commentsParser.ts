@@ -5,7 +5,7 @@
 
 import type { CollaborationMetrics } from '../../types/metrics'
 
-interface Comment {
+export interface Comment {
   id: string
   documentPath: string
   content: string
@@ -17,7 +17,7 @@ interface Comment {
   replies: Comment[]
 }
 
-interface CommentsResponse {
+export interface CommentsResponse {
   comments: Comment[]
   total: number
   totalWithReplies: number

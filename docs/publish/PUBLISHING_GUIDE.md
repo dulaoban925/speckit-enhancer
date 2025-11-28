@@ -15,7 +15,59 @@
 
 ---
 
-## 🚀 快速发布（5 分钟）
+## 🚀 快速发布（1 分钟）⚡ 新增！
+
+### 使用一键发布脚本（推荐）✨
+
+我们提供了一键发布脚本，自动处理版本更新、构建和发布：
+
+```bash
+# 1. 提交所有更改
+git add .
+git commit -m "feat: 添加新功能"
+
+# 2. 一键发布（会自动完成所有步骤）
+./scripts/publish.sh patch  # 补丁版本
+# ./scripts/publish.sh minor  # 次要版本
+# ./scripts/publish.sh major  # 主要版本
+
+# 3. 等待 npm 同步完成（2-5 分钟）
+```
+
+**脚本会自动执行：**
+- ✅ 检查 Git 状态
+- ✅ 更新 CLI 和 Dashboard 版本号
+- ✅ 运行构建和测试
+- ✅ 验证构建产物
+- ✅ 发布到 npm
+- ✅ 推送代码和标签
+
+📖 **详细文档**：[发布脚本使用指南](./publish/PUBLISH_SCRIPT_README.md) | [快速参考](./publish/QUICK_PUBLISH.md)
+
+### 首次发布（需要先登录 npm）
+
+```bash
+# 1. 登录 npm
+cd cli
+npm login
+
+# 2. 使用发布脚本
+cd ..
+./scripts/publish.sh patch
+```
+
+### 测试发布流程
+
+```bash
+# 使用 --dry-run 测试（不会实际发布）
+./scripts/publish.sh patch --dry-run
+```
+
+---
+
+## 🔧 手动发布（传统方式）
+
+如果需要手动控制每个步骤：
 
 ### 首次发布
 

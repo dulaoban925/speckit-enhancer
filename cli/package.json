@@ -1,6 +1,6 @@
 {
   "name": "@superying/speckit-enhancer-cli",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Speckit Enhancer - CLI for serving dashboard and managing project documentation",
   "main": "dist/index.js",
   "bin": {
@@ -21,13 +21,37 @@
   },
   "keywords": [
     "spec-kit",
+    "speckit",
     "cli",
     "documentation",
-    "viewer"
+    "viewer",
+    "dashboard",
+    "markdown",
+    "comment",
+    "specification",
+    "project-management",
+    "workflow",
+    "dev-tools"
   ],
-  "author": "",
+  "author": {
+    "name": "dulaoban925",
+    "email": "13975145507@163.com"
+  },
   "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dulaoban925/speckit-enhancer.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/dulaoban925/speckit-enhancer/issues"
+  },
+  "homepage": "https://github.com/dulaoban925/speckit-enhancer#readme",
   "publishConfig": {
     "access": "public"
   },

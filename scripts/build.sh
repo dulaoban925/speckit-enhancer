@@ -15,7 +15,7 @@ rm -rf dashboard/dist
 # 2. 构建 Dashboard (前端)
 echo "🎨 构建 Dashboard..."
 cd dashboard
-npm run build:prod
+npm run build
 cd ..
 
 # 3. 复制 Dashboard 静态文件到 CLI

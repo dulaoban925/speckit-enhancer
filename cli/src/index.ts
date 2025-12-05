@@ -14,6 +14,7 @@ import {
   updateCommentCommand,
   deleteCommentCommand,
 } from './commands/comment.js'
+import { createProjectCommand } from './commands/project/index.js'
 
 // 获取当前文件的目录路径（ES 模块）
 const __filename = fileURLToPath(import.meta.url)
@@ -165,40 +166,7 @@ commentCmd
   })
 
 // ==================== Project 命令组 ====================
-const projectCmd = program.command('project').description('项目管理')
-
-projectCmd
-  .command('init')
-  .description('初始化 Speckit 项目')
-  .argument('[project-path]', '项目路径', '.')
-  .option('-t, --template <name>', '项目模板', 'default')
-  .action((projectPath, options) => {
-    console.log(`正在初始化项目: ${projectPath}`)
-    console.log(`使用模板: ${options.template}`)
-    console.log('此功能即将推出...')
-  })
-
-projectCmd
-  .command('info')
-  .description('显示项目信息')
-  .argument('[project-path]', '项目路径', '.')
-  .option('-f, --format <format>', '输出格式 (json|text)', 'json')
-  .action((projectPath, options) => {
-    console.log(`正在查看项目信息: ${projectPath}`)
-    console.log(`输出格式: ${options.format}`)
-    console.log('此功能即将推出...')
-  })
-
-projectCmd
-  .command('validate')
-  .description('验证项目结构')
-  .argument('[project-path]', '项目路径', '.')
-  .option('-s, --strict', '严格验证模式', false)
-  .action((projectPath, options) => {
-    console.log(`正在验证项目: ${projectPath}`)
-    console.log(`严格模式: ${options.strict}`)
-    console.log('此功能即将推出...')
-  })
+program.addCommand(createProjectCommand())
 
 // 解析命令行参数
 program.parse()

@@ -69,6 +69,8 @@ Key bash scripts in `.specify/scripts/bash/`:
 - 本地文件系统 (`.specify/memory/comments/` 用于评论存储,JSON 格式) (001-speckit-ui-viewer)
 - TypeScript 5.x + React 18, Vite 5, Recharts 2.x, date-fns 4.x, jsPDF 2.x, papaparse 5.x, react-window 1.x, Zustand 4.x (状态管理) (002-feature-dashboard)
 - 本地文件系统(specs/[feature-id]/, .specify/memory/comments/) (002-feature-dashboard)
+- Node.js 18+ (LTS), TypeScript 5.x + Commander.js (CLI 框架), execa (子进程执行), fs-extra (文件操作), gray-matter (frontmatter 解析), js-yaml (YAML 支持) (004-project-cli-commands)
+- 本地文件系统(`.specify/`, `.claude/`, `specs/` 目录), Git 仓库(分支和提交信息) (004-project-cli-commands)
 
 ## Recent Changes
 - 001-speckit-ui-viewer: Added Node.js 18+ (LTS), TypeScript 5.x + React 18, Vite 5, Marked.js (Markdown 渲染), Prism.js (语法高亮), Commander.js (CLI 框架)
